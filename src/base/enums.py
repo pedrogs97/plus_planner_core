@@ -1,9 +1,9 @@
 """Project Enums"""
 
-from enum import StrEnum
+from enum import Enum
 
 
-class GenderEnum(StrEnum):
+class GenderEnum(Enum):
     """
     Gender Enum
 
