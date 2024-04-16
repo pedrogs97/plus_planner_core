@@ -1,5 +1,9 @@
+"""Models for the auth app."""
+
 from tortoise import fields
 from src.base.models import BaseModel
+from src.base.enums import ActionEnum, ThemeEnum
+
 
 class UserModel(BaseModel):
     """Model to represent a user."""
@@ -13,10 +17,14 @@ class UserModel(BaseModel):
     profile_picture_path = fields.CharField(max_length=255, null=True)
     is_clinic_master = fields.BooleanField(default=False)
     is_active = fields.BooleanField(default=True)
+    theme = fields.CharEnumField(
+        enum_type=ThemeEnum, max_length=5, default=ThemeEnum.LIGHT
+    )
+    last_login_in = fields.DatetimeField(null=True)
 
     def __str__(self):
         return self.full_name
-    
+
     class Meta:
         table = "users"
 
@@ -25,48 +33,76 @@ class ProfileModel(BaseModel):
     """Model to represent a profile."""
 
     name = fields.CharField(max_length=255)
-    clinic = fields.ForeignKeyField("models.ClinicModel", related_name="profiles", on_delete=fields.CASCADE)
-    
+    clinic = fields.ForeignKeyField(
+        "models.ClinicModel",
+        related_name="profiles",
+        on_delete=fields.NO_ACTION,
+    )
+    permissions = fields.ManyToManyField(
+        "models.PermissionModel", related_name="profiles"
+    )
+
+    class Meta:
+        table = "profiles"
 
 
-class LinceseModel(BaseModel):
-    """Model to represent a license."""
+class PermissionModel(BaseModel):
+    """Model to represent a permission."""
 
-    license_number = fields.CharField(max_length=20)
-    modules = fields.CharField(max_length=255)
-    expiration_date = fields.DateField(null=True)
+    module = fields.CharField(max_length=255)
+    model = fields.CharField(max_length=255)
+    action = fields.CharEnumField(
+        enum_type=ActionEnum, max_length=6, default=ActionEnum.VIEW
+    )
+    description = fields.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.license_number}"
-    
-    class Meta:
-        table = "licenses"
+        return self.name
 
-class ClinicModel(BaseModel):   
+    class Meta:
+        table = "permissions"
+
+
+class ClinicModel(BaseModel):
     """Model to represent a clinic."""
 
-    head_quarters = fields.ForeignKeyField("models.ClinicModel", related_name="subsidiaries", on_delete=fields.CASCADE, null=True)
-    license = fields.ForeignKeyField("models.LinceseModel", related_name="clinics", on_delete=fields.CASCADE)
+    head_quarters = fields.ForeignKeyField(
+        "models.ClinicModel",
+        related_name="subsidiaries",
+        on_delete=fields.NO_ACTION,
+        null=True,
+    )
+    license = fields.ForeignKeyField(
+        "models.LicenseModel",
+        related_name="clinics",
+        on_delete=fields.NO_ACTION,
+    )
     company_name = fields.CharField(max_length=255)
     company_register_number = fields.CharField(max_length=20)
     legal_entity = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
+    users = fields.ManyToManyField("models.UserModel", related_name="clinics")
 
     def __str__(self):
         return f"{self.company_name} - {self.legal_entity}"
-    
+
     class Meta:
         table = "clinics"
 
 
-class ClinicUserModel(BaseModel):
-    """Model to represent the relationship between a clinic and a user."""
+class TokenModel(BaseModel):
+    """Model to represent a token."""
 
-    clinic = fields.ForeignKeyField("models.ClinicModel", related_name="users", on_delete=fields.CASCADE)
-    user = fields.ForeignKeyField("models.UserModel", related_name="clinics", on_delete=fields.CASCADE)
+    token = fields.CharField(max_length=255)
+    user = fields.ForeignKeyField(
+        "models.UserModel", related_name="tokens", on_delete=fields.CASCADE
+    )
+    refresh_token = fields.CharField(max_length=255)
+    expires_at = fields.DatetimeField()
+    refresh_expires_at = fields.DatetimeField()
 
     def __str__(self):
-        return f"{self.clinic} - {self.user}"
-    
+        return self.id
+
     class Meta:
-        table = "clinic_users"
+        table = "tokens"

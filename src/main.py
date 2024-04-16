@@ -17,7 +17,7 @@ from src.config import (
     LOG_FILENAME,
     ORIGINS,
     STATIC_DIR,
-    get_database_url,
+    TORTOISE_ORM,
 )
 from src.exceptions import default_response_exception
 
@@ -50,8 +50,7 @@ appAPI = FastAPI(
 
 register_tortoise(
     appAPI,
-    db_url=get_database_url(),
-    modules={"models": ["src.clinic_office.models"]},
+    config=TORTOISE_ORM,
 )
 
 appAPI.add_middleware(

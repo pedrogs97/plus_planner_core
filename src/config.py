@@ -28,9 +28,24 @@ def get_database_url(test=False):
         else os.getenv("POSTGRESQL_PASSWORD_TEST", "")
     )
     port = os.getenv("POSTGRESQL_PORT", "5432")
-    teste = f"postgres://{user}:{password}@{server}:{port}/{db}"
     return f"postgres://{user}:{password}@{server}:{port}/{db}"
 
+
+TORTOISE_ORM = {
+    "connections": {"default": get_database_url()},
+    "apps": {
+        "models": {
+            "models": [
+                "aerich.models",
+                "src.clinic_office.models",
+                "src.auth.models",
+                "src.scheduler.models",
+                "src.billing.models",
+            ],
+            "default_connection": "default",
+        },
+    },
+}
 
 PASSWORD_SUPER_USER = os.getenv("PASSWORD_SUPER_USER")
 

@@ -7,3 +7,15 @@ from invoke import task
 def rundev(cmd):
     """Run the development server with uvicorn."""
     cmd.run("uvicorn src.main:appAPI --port 8000 --reload")
+
+
+@task
+def makemigrations(cmd, message):
+    """Generate migrations for the database."""
+    cmd.run(f"aerich migrate --name '{message}'")
+
+
+@task
+def migrate(cmd):
+    """Apply migrations to the database."""
+    cmd.run("aerich upgrade")
