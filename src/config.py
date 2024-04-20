@@ -33,7 +33,7 @@ def get_database_url(test=False, sqlite=False):
 
 
 TORTOISE_ORM = {
-    "connections": {"default": get_database_url(sqlite=os.getenv("ENABLE_SQLITE", False))},
+    "connections": {"default": get_database_url(sqlite=os.getenv("ENABLE_SQLITE"))},
     "apps": {
         "models": {
             "models": [
