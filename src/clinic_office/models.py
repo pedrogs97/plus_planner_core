@@ -35,6 +35,7 @@ class DeskModel(BaseModel):
 
     number = fields.CharField(max_length=255)
     vacation = fields.BooleanField(default=True)
+    capacity = fields.IntField(default=1)
     observation = fields.TextField(null=True)
 
     def __str__(self):

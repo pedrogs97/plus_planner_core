@@ -2,7 +2,6 @@
 
 import os
 from datetime import datetime
-from tortoise import Tortoise
 
 from dotenv import load_dotenv
 
@@ -13,8 +12,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_HOST = os.getenv("POSTGRESQL_HOST", "localhost")
 
 
-def get_database_url(test=False):
+def get_database_url(test=False, sqlite=False):
     """Return database url"""
+    if sqlite:
+        return "sqlite://db.sqlite3"
     server = DB_HOST if not test else os.getenv("POSTGRESQL_HOST_TEST", "localhost")
     db = os.getenv("POSTGRESQL_DATABASE", "app") if not test else "db_test"
     user = (
@@ -32,7 +33,7 @@ def get_database_url(test=False):
 
 
 TORTOISE_ORM = {
-    "connections": {"default": get_database_url()},
+    "connections": {"default": get_database_url(sqlite=os.getenv("ENABLE_SQLITE", False))},
     "apps": {
         "models": {
             "models": [
