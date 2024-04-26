@@ -1,6 +1,8 @@
+"""Models for the scheduler app."""
 from tortoise import fields
-from src.base.models import BaseModel
+
 from src.base.enums import SchedulerStatus
+from src.base.models import BaseModel
 
 
 class SchedulerModel(BaseModel):

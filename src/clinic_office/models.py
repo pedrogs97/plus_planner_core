@@ -1,10 +1,11 @@
 """This module contains the models of the clinic_office app."""
 
 import datetime
+
 from tortoise import fields
-from src.base.models import BaseModel
 
 from src.base.enums import GenderEnum
+from src.base.models import BaseModel
 
 
 class PatientModel(BaseModel):
@@ -34,7 +35,7 @@ class DeskModel(BaseModel):
     """Model to represent a desk."""
 
     number = fields.CharField(max_length=255)
-    vacation = fields.BooleanField(default=True)
+    vacancy = fields.BooleanField(default=True)
     capacity = fields.IntField(default=1)
     observation = fields.TextField(null=True)
 

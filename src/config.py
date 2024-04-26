@@ -4,12 +4,15 @@ import os
 from datetime import datetime
 
 from dotenv import load_dotenv
+from passlib.context import CryptContext
 
 load_dotenv()
 # PostgresSQL config
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DB_HOST = os.getenv("POSTGRESQL_HOST", "localhost")
+
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_database_url(test=False, sqlite=False):

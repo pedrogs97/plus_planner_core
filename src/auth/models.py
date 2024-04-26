@@ -1,8 +1,9 @@
 """Models for the auth app."""
 
 from tortoise import fields
-from src.base.models import BaseModel
+
 from src.base.enums import ActionEnum, ThemeEnum
+from src.base.models import BaseModel
 
 
 class UserModel(BaseModel):
@@ -21,6 +22,12 @@ class UserModel(BaseModel):
         enum_type=ThemeEnum, max_length=5, default=ThemeEnum.LIGHT
     )
     last_login_in = fields.DatetimeField(null=True)
+    profile = fields.ForeignKeyField(
+        "models.ProfileModel",
+        related_name="users",
+        on_delete=fields.SET_NULL,
+        null=True,
+    )
 
     def __str__(self):
         return self.full_name
@@ -57,7 +64,7 @@ class PermissionModel(BaseModel):
     description = fields.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return f"{self.module} - {self.model} - {self.action}"
 
     class Meta:
         table = "permissions"
@@ -81,7 +88,6 @@ class ClinicModel(BaseModel):
     company_register_number = fields.CharField(max_length=20)
     legal_entity = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
-    users = fields.ManyToManyField("models.UserModel", related_name="clinics")
 
     def __str__(self):
         return f"{self.company_name} - {self.legal_entity}"
