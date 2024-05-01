@@ -49,6 +49,9 @@ class ProfileModel(BaseModel):
         "models.PermissionModel", related_name="profiles"
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         table = "profiles"
 

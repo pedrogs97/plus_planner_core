@@ -10,7 +10,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from tortoise.contrib.fastapi import register_tortoise
 
+from src.auth.router import router as auth_router
 from src.config import (
+    BASE_API,
     BASE_DIR,
     DATE_FORMAT,
     FORMAT,
@@ -47,6 +49,8 @@ appAPI = FastAPI(
     exception_handlers=exception_handlers,
     version="1.0.0",
 )
+
+appAPI.include_router(auth_router, prefix=BASE_API)
 
 register_tortoise(
     appAPI,

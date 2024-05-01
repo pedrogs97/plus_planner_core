@@ -19,3 +19,12 @@ def makemigrations(cmd, message):
 def migrate(cmd):
     """Apply migrations to the database."""
     cmd.run("aerich upgrade")
+
+
+@task
+def runtest(cmd, file=None):
+    """Run tests."""
+    if file:
+        cmd.run(f"pytest src/tests/{file}.py")
+    else:
+        cmd.run("pytest src/tests")

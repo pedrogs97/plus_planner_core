@@ -51,6 +51,22 @@ TORTOISE_ORM = {
     },
 }
 
+TORTOISE_ORM_TEST = {
+    "connections": {"default": "sqlite://db_test.sqlite3"},
+    "apps": {
+        "models": {
+            "models": [
+                "aerich.models",
+                "src.clinic_office.models",
+                "src.auth.models",
+                "src.scheduler.models",
+                "src.billing.models",
+            ],
+            "default_connection": "default",
+        },
+    },
+}
+
 PASSWORD_SUPER_USER = os.getenv("PASSWORD_SUPER_USER")
 
 TIMEZONE = os.getenv("TIMEZONE", "America/Bahia")

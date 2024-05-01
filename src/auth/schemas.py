@@ -5,8 +5,8 @@ from typing import List, Optional
 
 from pydantic import EmailStr, Field
 
-from src.base.schemas import BaseSchema
 from src.base.enums import ActionEnum, ThemeEnum
+from src.base.schemas import BaseSchema
 
 
 class RefreshTokenSchema(BaseSchema):
@@ -35,6 +35,17 @@ class ProfileSerializerSchema(BaseSchema):
     id: int
     name: str
     permissions: List[PermissionSerializerSchema]
+
+
+class ShortProfileSerializerSchema(BaseSchema):
+    """
+    Short Profile schema
+
+    ProfileModel representation for response
+    """
+
+    id: int
+    name: str
 
 
 class UserUpdateSchema(BaseSchema):
@@ -74,7 +85,7 @@ class UserSerializerSchema(BaseSchema):
     """
 
     id: int
-    profile: ProfileSerializerSchema
+    profile: ShortProfileSerializerSchema
     full_name: str = Field(serialization_alias="fullName")
     username: str
     email: str
@@ -117,13 +128,8 @@ class NewProfileSchema(BaseSchema):
 class NewUserSchema(BaseSchema):
     """New user schema"""
 
-    profile_id: Optional[int] = Field(
-        alias="profileId", serialization_alias="profile_id"
-    )
-    clinic_id: int = Field(
-        alias="clinicId",
-        serialization_alias="clinic_id",
-    )
+    profile_id: Optional[int] = Field(alias="profileId")
+    clinic_id: int = Field(alias="clinicId")
     username: str
     email: EmailStr
     taxpayer_id: str = Field(alias="taxpayerId")
