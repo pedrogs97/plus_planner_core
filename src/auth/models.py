@@ -29,6 +29,12 @@ class UserModel(BaseModel):
         on_delete=fields.SET_NULL,
         null=True,
     )
+    clinic: fields.ForeignKeyRelation["ClinicModel"] = fields.ForeignKeyField(
+        "models.ClinicModel",
+        related_name="users",
+        on_delete=fields.SET_NULL,
+        null=True,
+    )
 
     def __str__(self):
         return self.full_name
@@ -93,6 +99,7 @@ class ClinicModel(BaseModel):
     company_register_number = fields.CharField(max_length=20)
     legal_entity = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
+    subdomain = fields.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return f"{self.company_name} - {self.legal_entity}"

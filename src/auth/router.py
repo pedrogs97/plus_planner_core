@@ -27,26 +27,31 @@ user_service = UserService()
 
 @router.post("/login/")
 async def login(
+    request: Request,
     login_schema: LoginSchema = Depends(),
 ):
     """Login a user"""
     response_data = await user_service.login(
-        login_schema.username, login_schema.password
+        login_schema.username, login_schema.password, request.state.clinic
     )
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
 
 
 @router.post("/refresh-token/")
-async def refresh_token(token: Annotated[str, Depends(user_service.oauth2_scheme)]):
+async def refresh_token(
+    request: Request, token: Annotated[str, Depends(user_service.oauth2_scheme)]
+):
     """Refresh a token"""
-    response_data = await user_service.refresh_token(token)
+    response_data = await user_service.refresh_token(token, request.state.clinic)
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
 
 
 @router.post("/logout/")
-async def logout(token: Annotated[str, Depends(user_service.oauth2_scheme)]):
+async def logout(
+    request: Request, token: Annotated[str, Depends(user_service.oauth2_scheme)]
+):
     """Logout a user"""
-    await user_service.logout(token)
+    await user_service.logout(token, request.state.clinic)
     return JSONResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -72,7 +77,6 @@ async def register(
 
 @router.get("/{user_id}/")
 async def get_user(
-    request: Request,
     user_id: int,
     authenticated_user: Annotated[
         UserModel,

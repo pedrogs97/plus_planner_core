@@ -16,7 +16,7 @@ from tortoise.expressions import Q
 from typing_extensions import Self
 
 from src.auth.filters import UserFilter
-from src.auth.models import ProfileModel, TokenModel, UserModel
+from src.auth.models import ProfileModel, TokenModel, UserModel, ClinicModel
 from src.auth.schemas import (
     NewProfileSchema,
     NewUserSchema,
@@ -78,6 +78,9 @@ class UserService:
             "sub": user.id,
             "type": "access",
             "profile": profile.name if profile else "Super User",
+            "profile_id": profile.id if profile else "",
+            "clinic": user.clinic.company_name if user.clinic else "",
+            "clinic_id": user.clinic.id if user.clinic_id else "",
             "email": user.email,
             "full_name": user.full_name,
             "permissions": permissions,
@@ -94,6 +97,9 @@ class UserService:
             "sub": user.id,
             "type": "refresh",
             "profile": profile.name if profile else "Super User",
+            "profile_id": profile.id if profile else "",
+            "clinic": user.clinic.company_name if user.clinic else "",
+            "clinic_id": user.clinic.id if user.clinic_id else "",
             "email": user.email,
             "full_name": user.full_name,
             "permissions": permissions,
@@ -166,7 +172,9 @@ class UserService:
         """Verify if password is correct"""
         return bcrypt_context.verify(password, hashed_password)
 
-    async def login(self, email_or_username: str, password: str) -> Union[dict, None]:
+    async def login(
+        self, email_or_username: str, password: str, clinic: Union[ClinicModel, None]
+    ) -> Union[dict, None]:
         """Try login a user"""
         user = await UserModel.filter(
             Q(email=email_or_username) | Q(username=email_or_username)
@@ -174,6 +182,12 @@ class UserService:
 
         if not user or not self.password_is_correct(password, user.password):
             return None
+
+        if not clinic and not user.is_superuser:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        if clinic and user.clinic != clinic:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         if not user.profile and not user.is_superuser:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -207,12 +221,12 @@ class UserService:
         user = await UserModel.get_or_none(id=token_decoded["sub"])
         return user
 
-    async def logout(self, token: str) -> None:
+    async def logout(self, token: str, clinic: Union[ClinicModel, None]) -> None:
         """Logout a user"""
         try:
             token_decoded = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
             user = await self.get_user_by_token(token_decoded)
-            if not user:
+            if not user and token_decoded["type"] != "access" and clinic != user.clinic:
                 return
             old_token = await TokenModel.get(user=user)
 
@@ -222,12 +236,20 @@ class UserService:
         except jwt.PyJWTError:
             logger.warning("Failed logout")
 
-    async def refresh_token(self, token: str) -> Union[dict, None]:
+    async def refresh_token(
+        self, token: str, clinic: Union[ClinicModel, None]
+    ) -> Union[dict, None]:
         """Refresh token"""
         try:
             token_decoded = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
             user = await UserModel.get(id=token_decoded["sub"])
             if not user:
+                return None
+
+            if token_decoded["type"] != "refresh" and not self.token_is_valid(token):
+                return None
+
+            if clinic and user.clinic != clinic:
                 return None
 
             return self.__get_new_token(user)

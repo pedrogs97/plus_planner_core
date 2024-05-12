@@ -1,4 +1,5 @@
 """Project backends."""
+
 import logging
 from typing import Annotated, List, Union
 
@@ -7,7 +8,7 @@ from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
 from starlette.requests import Request
 
-from src.auth.models import PermissionModel, UserModel
+from src.auth.models import PermissionModel, UserModel, ClinicModel
 from src.auth.schemas import PermissionSerializerSchema
 from src.auth.service import UserService
 from src.config import ALGORITHM, SECRET_KEY
@@ -40,7 +41,9 @@ class PermissionChecker:
             and perm_to_check["action"] == user_perm.action
         )
 
-    def has_permissions(self, user: UserModel) -> bool:
+    def has_permissions(
+        self, user: UserModel, clinic: Union[ClinicModel, None]
+    ) -> bool:
         """Check if user has permission"""
 
         if not user.is_active:
@@ -48,6 +51,9 @@ class PermissionChecker:
 
         if user.is_superuser or user.is_clinic_master or self.me:
             return True
+
+        if clinic and user.clinic.id != clinic.id:
+            return False
 
         if isinstance(self.required_permissions, list):
             return any(
@@ -63,6 +69,7 @@ class PermissionChecker:
 
     async def __call__(
         self,
+        request: Request,
         token: Annotated[str, Depends(user_service.oauth2_scheme)],
     ) -> Union[UserModel, None]:
         try:
@@ -75,7 +82,7 @@ class PermissionChecker:
                 )
             user = await user_service.get_user_by_token(token_decoded)
 
-            if not user or not self.has_permissions(user):
+            if not user or not self.has_permissions(user, request.state.clinic):
                 raise HTTPException(
                     detail={"message": "Usuário não autorizado"},
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -97,6 +104,15 @@ class ClinicByHost:
     async def __call__(
         self,
         request: Request,
-    ) -> Union[UserModel, None]:
+    ) -> None:
         host = request.headers.get("host")
-        request.state.clinic = host
+        if not host:
+            request.state.clinic = None
+            return
+        if "127.0.0.1" in host:
+            request.state.clinic = None
+            return
+
+        subdomain = host.split(".")[0]
+        clinic = await ClinicModel.get_or_none(subdomain=subdomain)
+        request.state.clinic = clinic
