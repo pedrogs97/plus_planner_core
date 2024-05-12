@@ -48,7 +48,7 @@ class ShortProfileSerializerSchema(BaseSchema):
     name: str
 
 
-class UserUpdateSchema(BaseSchema):
+class UpdateUserSchema(BaseSchema):
     """
     User schema
 

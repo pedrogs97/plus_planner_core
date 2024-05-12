@@ -44,7 +44,7 @@ class TestBase:
         """Create a user."""
         await UserModel.create(
             full_name="Admin",
-            password=self.user_service.has_password("admin"),
+            password=self.user_service.hash_password("admin"),
             username="admin",
             email="admin.test@email.com",
             taxpayer_id="12345678901",

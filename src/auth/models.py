@@ -13,16 +13,17 @@ class UserModel(BaseModel):
     password = fields.CharField(max_length=255)
     username = fields.CharField(max_length=255, unique=True)
     email = fields.CharField(max_length=255, unique=True)
-    taxpayer_id = fields.CharField(max_length=12, unique=True)
+    taxpayer_id = fields.CharField(max_length=12, null=True)
     phone = fields.CharField(max_length=20, null=True)
     profile_picture_path = fields.CharField(max_length=255, null=True)
     is_clinic_master = fields.BooleanField(default=False)
+    is_superuser = fields.BooleanField(default=False)
     is_active = fields.BooleanField(default=True)
     theme = fields.CharEnumField(
         enum_type=ThemeEnum, max_length=5, default=ThemeEnum.LIGHT
     )
     last_login_in = fields.DatetimeField(null=True)
-    profile = fields.ForeignKeyField(
+    profile: fields.ForeignKeyRelation["ProfileModel"] = fields.ForeignKeyField(
         "models.ProfileModel",
         related_name="users",
         on_delete=fields.SET_NULL,
@@ -44,6 +45,7 @@ class ProfileModel(BaseModel):
         "models.ClinicModel",
         related_name="profiles",
         on_delete=fields.NO_ACTION,
+        null=True,
     )
     permissions = fields.ManyToManyField(
         "models.PermissionModel", related_name="profiles"
@@ -102,11 +104,11 @@ class ClinicModel(BaseModel):
 class TokenModel(BaseModel):
     """Model to represent a token."""
 
-    token = fields.CharField(max_length=255)
+    token = fields.CharField(max_length=500)
     user = fields.ForeignKeyField(
         "models.UserModel", related_name="tokens", on_delete=fields.CASCADE
     )
-    refresh_token = fields.CharField(max_length=255)
+    refresh_token = fields.CharField(max_length=500)
     expires_at = fields.DatetimeField()
     refresh_expires_at = fields.DatetimeField()
 

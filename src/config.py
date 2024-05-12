@@ -117,3 +117,14 @@ ORIGINS = [
     "https://127.0.0.1",
     "https://localhost",
 ]
+
+PERMISSIONS = {
+    "auth": {
+        "models": [
+            {"name": "permissions", "label": "Permissões"},
+            {"name": "profiles", "label": "Perfil de usuário"},
+            {"name": "users", "label": "Usuários"},
+        ],
+        "label": "Perfis e Permissões",
+    },
+}

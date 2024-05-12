@@ -2,15 +2,20 @@
 
 import logging
 import os
+from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from tortoise.contrib.fastapi import register_tortoise
+from fastapi_pagination import add_pagination
+from tortoise import Tortoise, connections
+from tortoise.exceptions import DBConnectionError
 
 from src.auth.router import router as auth_router
+from src.auth.service import UserService
+from src.backends import ClinicByHost
 from src.config import (
     BASE_API,
     BASE_DIR,
@@ -45,16 +50,31 @@ exception_handlers = {
 }
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Context manager for the lifespan of the application."""
+    logger.info("Service Version %s", app.version)
+    # db connected
+    await Tortoise.init(config=TORTOISE_ORM)
+    try:
+        await UserService().create_superuser()
+    finally:
+        pass
+    yield
+    # app teardown
+    # db connections closed
+    await connections.close_all()
+
+
 appAPI = FastAPI(
     exception_handlers=exception_handlers,
     version="1.0.0",
+    lifespan=lifespan,
 )
 
-appAPI.include_router(auth_router, prefix=BASE_API)
-
-register_tortoise(
-    appAPI,
-    config=TORTOISE_ORM,
+add_pagination(appAPI)
+appAPI.include_router(
+    auth_router, prefix=BASE_API, dependencies=[Depends(ClinicByHost())]
 )
 
 appAPI.add_middleware(
@@ -75,3 +95,13 @@ appAPI.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 def root():
     """Redirect to docs"""
     return RedirectResponse(url="/docs")
+
+
+@appAPI.get("/health", tags=["Service"])
+async def health():
+    """Health check"""
+    try:
+        await connections.get("default").execute_query("SELECT 1")
+        return {"status": "ok"}
+    except DBConnectionError:
+        return {"status": "Database connection error"}
