@@ -116,8 +116,8 @@ class UserListSerializerSchema(BaseSchema):
     )
 
 
-class NewProfileSchema(BaseSchema):
-    """New profile schema"""
+class NewUpdateProfileSchema(BaseSchema):
+    """New and Update profile schema"""
 
     name: Optional[str] = None
     permissionsIds: Optional[List[int]] = Field(
@@ -151,3 +151,27 @@ class NewPasswordSchema(BaseSchema):
     """New password schema"""
 
     user_id: int = Field(serialization_alias="userId")
+
+
+class NewUpdateClinicSchema(BaseSchema):
+    """New and Update clinic schema"""
+
+    company_name: str
+    address: str
+    phone: str
+    email: str
+    company_register_number: str = Field(alias="companyRegisterNumber")
+    legal_entity: Optional[bool] = Field(alias="legalEntity", default=False)
+
+
+class ClinicSerializerSchema(BaseSchema):
+    """Clinic serializer schema"""
+
+    id: int
+    company_name: str = Field(serialization_alias="companyName")
+    address: str
+    phone: str
+    email: str
+    company_register_number: str = Field(serialization_alias="companyRegisterNumber")
+    legal_entity: bool = Field(serialization_alias="legalEntity")
+    users: List[UserListSerializerSchema]

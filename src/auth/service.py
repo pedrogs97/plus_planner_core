@@ -15,15 +15,16 @@ from fastapi_pagination import Page, Params, paginate
 from tortoise.expressions import Q
 from typing_extensions import Self
 
-from src.auth.filters import UserFilter
+from src.auth.filters import UserFilter, ProfileFilter
 from src.auth.models import ProfileModel, TokenModel, UserModel, ClinicModel
 from src.auth.schemas import (
-    NewProfileSchema,
+    NewUpdateProfileSchema,
     NewUserSchema,
     PermissionSerializerSchema,
     ProfileSerializerSchema,
     ShortProfileSerializerSchema,
     UserSerializerSchema,
+    NewUpdateClinicSchema,
 )
 from src.config import (
     ACCESS_TOKEN_EXPIRE_HOURS,
@@ -337,13 +338,12 @@ class UserService:
     async def delete_user(self, user_id: int, autheticated_user: UserModel) -> bool:
         """Delete user"""
         user = await self.get_or_404(user_id)
-        user.deleted = True
-        user.save()
+        user.delete()
         self.log_service.set_log(
             module="auth",
             model="users",
             operation="Deleção de usuário",
-            identifier=user.id,
+            identifier=0,
             user=autheticated_user,
         )
         return True
@@ -362,7 +362,9 @@ class UserService:
     ) -> Page[UserSerializerSchema]:
         """Get paginated users and apply filters"""
         user_list = user_filters.filter(
-            UserModel.filter(id__not=authenticated_user.id).prefetch_related("profile")
+            UserModel.filter(
+                id__not=authenticated_user.id, clinic=authenticated_user.clinic
+            ).prefetch_related("profile")
         ).order_by("-created_at")
 
         params = Params(page=page, size=size)
@@ -401,18 +403,25 @@ class ProfileService:
 
     def serializer_profile(self, profile: ProfileModel):
         """Serialize profile"""
-        permissions_serializer = [
-            PermissionSerializerSchema(**perm.__dict__) for perm in profile.permissions
-        ]
+        permissions_serializer = (
+            [
+                PermissionSerializerSchema(**perm.__dict__)
+                for perm in profile.permissions
+            ]
+            if profile.permissions
+            else []
+        )
         return ProfileSerializerSchema(
             **profile.__dict__, permissions=permissions_serializer
         )
 
     async def create_profile(
-        self, new_profile: NewProfileSchema
+        self, new_profile: NewUpdateProfileSchema, authenticated_user: UserModel
     ) -> ProfileSerializerSchema:
         """Create a profile"""
-        profile = await ProfileModel.create(**new_profile.model_dump(by_alias=False))
+        profile = await ProfileModel.create(
+            **new_profile.model_dump(by_alias=False), clinic=authenticated_user.clinic
+        )
         self.log_service.set_log(
             module="auth",
             model="profiles",
@@ -421,3 +430,148 @@ class ProfileService:
             user=None,
         )
         return self.serializer_profile(profile)
+
+    async def update_profile(
+        self,
+        profile_id: int,
+        new_data: NewUpdateProfileSchema,
+        authenticated_user: UserModel,
+    ) -> ProfileSerializerSchema:
+        """Update profile"""
+        profile = await self.get_profile_or_404(profile_id)
+        profile.update_from_dict(new_data.model_dump(by_alias=False))
+        profile.save()
+        self.log_service.set_log(
+            module="auth",
+            model="profiles",
+            operation="Atualização de perfil",
+            identifier=profile.id,
+            user=authenticated_user,
+        )
+        return self.serializer_profile(profile)
+
+    async def delete_profile(
+        self, profile_id: int, authenticated_user: UserModel
+    ) -> bool:
+        """Delete profile"""
+        profile = await self.get_profile_or_404(profile_id)
+        profile.delete()
+        self.log_service.set_log(
+            module="auth",
+            model="profiles",
+            operation="Deleção de perfil",
+            identifier=0,
+            user=authenticated_user,
+        )
+        return True
+
+    async def get_profile(self, profile_id: int) -> ProfileSerializerSchema:
+        """Get profile"""
+        profile = await self.get_profile_or_404(profile_id)
+        return self.serializer_profile(profile)
+
+    async def get_profiles(
+        self,
+        authenticated_user: UserModel,
+        profile_filters: ProfileFilter,
+        page: int = 1,
+        size: int = 50,
+    ) -> Page[ProfileSerializerSchema]:
+        """Get paginated profiles"""
+        profile_list = profile_filters.filter(
+            ProfileModel.filter(clinic=authenticated_user.clinic)
+        ).order_by("-created_at")
+        params = Params(page=page, size=size)
+        paginated = paginate(
+            profile_list,
+            params=params,
+            transformer=lambda profile_list: [
+                self.serializer_profile(profile).model_dump(by_alias=True)
+                for profile in profile_list
+            ],
+        )
+        return paginated
+
+    async def get_profiles_select(self, authenticated_user: UserModel):
+        """Get profiles for select"""
+        profile_list = await ProfileModel.filter(clinic=authenticated_user.clinic)
+        return [
+            {"id": profile.id, "name": profile.name} for profile in profile_list
+        ]
+    
+
+class ClinicService:
+    """Clinic Service"""
+
+    _instance = None
+
+    log_service = LogService()
+
+    def __new__(cls, *args, **kwargs) -> Self:
+        if not cls._instance:
+            cls._instance = super(ClinicService, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    async def get_clinic_or_404(self, clinic_id: int) -> ClinicModel:
+        """Get clinic or raise 404"""
+        clinic = await ClinicModel.get_or_none(id=clinic_id)
+        if not clinic:
+            raise HTTPException(
+                detail={"field": "clinicId", "message": "Clinica não encontrada"},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        return clinic
+
+    def serializer_clinic(self, clinic: ClinicModel):
+        """Serialize clinic"""
+        return ClinicModel(**clinic.__dict__)
+
+    async def create_clinic(
+        self, new_clinic: NewUpdateClinicSchema, authenticated_user: UserModel
+    ) -> ClinicModel:
+        """Create a clinic"""
+        clinic = await ClinicModel.create(
+            **new_clinic.model_dump(by_alias=False),
+            license=authenticated_user.clinic.license,
+            subdomain=authenticated_user.clinic.subdomain,
+        )
+        self.log_service.set_log(
+            module="auth",
+            model="clinics",
+            operation="Criação de clinica",
+            identifier=clinic.id,
+            user=authenticated_user,
+        )
+        return self.serializer_clinic(clinic)
+
+    async def update_clinic(
+        self,
+        clinic_id: int,
+        new_data: NewUpdateClinicSchema,
+        authenticated_user: UserModel
+    ) -> ClinicModel:
+        """Update clinic"""
+        clinic = await self.get_clinic_or_404(clinic_id)
+        clinic.update_from_dict(new_data.model_dump(by_alias=False))
+        clinic.save()
+        self.log_service.set_log(
+            module="auth",
+            model="clinics",
+            operation="Atualização de clinica",
+            identifier=clinic.id,
+            user=authenticated_user,
+        )
+        return self.serializer_clinic(clinic)
+
+    async def delete_clinic(
+        self, clinic_id: int, authenticated_user: UserModel
+    ) -> bool:
+        """Delete clinic"""
+        clinic = await self.get_clinic_or_404(clinic_id)
+        clinic.delete()
+        self.log_service.set_log(
+            module="auth",
+            model="clinics",
+            operation="Deleção de clinica",
+            identifier=0,
+            user=authenticated_user,

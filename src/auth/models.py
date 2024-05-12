@@ -100,6 +100,7 @@ class ClinicModel(BaseModel):
     legal_entity = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
     subdomain = fields.CharField(max_length=255, unique=True)
+    logo_path = fields.CharField(max_length=255, null=True)
 
     def __str__(self):
         return f"{self.company_name} - {self.legal_entity}"
