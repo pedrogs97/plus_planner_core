@@ -5,7 +5,7 @@ import os
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -27,6 +27,7 @@ from src.config import (
     TORTOISE_ORM,
 )
 from src.exceptions import default_response_exception
+from src.scheduler.manager import ConnectionManager
 
 if not os.path.exists(f"{BASE_DIR}/logs/"):
     os.makedirs(f"{BASE_DIR}/logs/")
@@ -105,3 +106,10 @@ async def health():
         return {"status": "ok"}
     except DBConnectionError:
         return {"status": "Database connection error"}
+
+
+@appAPI.websocket("/scheduler")
+async def scheduler(websocket: WebSocket):
+    manager = ConnectionManager()
+    manager.connect(websocket)
+    manager.listenner(websocket)

@@ -4,6 +4,7 @@ from tortoise import fields
 
 from src.base.enums import ActionEnum, ThemeEnum
 from src.base.models import BaseModel
+from src.billing.models import LicenseModel
 
 
 class UserModel(BaseModel):
@@ -84,23 +85,25 @@ class PermissionModel(BaseModel):
 class ClinicModel(BaseModel):
     """Model to represent a clinic."""
 
-    head_quarters = fields.ForeignKeyField(
+    head_quarter: fields.ForeignKeyRelation["ClinicModel"] = fields.ForeignKeyField(
         "models.ClinicModel",
         related_name="subsidiaries",
         on_delete=fields.NO_ACTION,
         null=True,
     )
-    license = fields.ForeignKeyField(
+    license: fields.ForeignKeyRelation["LicenseModel"] = fields.ForeignKeyField(
         "models.LicenseModel",
         related_name="clinics",
         on_delete=fields.NO_ACTION,
     )
     company_name = fields.CharField(max_length=255)
     company_register_number = fields.CharField(max_length=20)
-    legal_entity = fields.CharField(max_length=255)
+    legal_entity = fields.BooleanField(default=False)
     address = fields.CharField(max_length=255)
     subdomain = fields.CharField(max_length=255, unique=True)
     logo_path = fields.CharField(max_length=255, null=True)
+
+    users: fields.ReverseRelation["UserModel"]
 
     def __str__(self):
         return f"{self.company_name} - {self.legal_entity}"

@@ -175,3 +175,5 @@ class ClinicSerializerSchema(BaseSchema):
     company_register_number: str = Field(serialization_alias="companyRegisterNumber")
     legal_entity: bool = Field(serialization_alias="legalEntity")
     users: List[UserListSerializerSchema]
+    logo_path: Optional[str] = Field(serialization_alias="logoPath")
+    header_quarter: Optional[str] = Field(serialization_alias="headerQuarter")

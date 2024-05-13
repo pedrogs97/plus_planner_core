@@ -15,7 +15,7 @@ from fastapi_pagination import Page, Params, paginate
 from tortoise.expressions import Q
 from typing_extensions import Self
 
-from src.auth.filters import UserFilter, ProfileFilter
+from src.auth.filters import UserFilter, ProfileFilter, ClinicFilter
 from src.auth.models import ProfileModel, TokenModel, UserModel, ClinicModel
 from src.auth.schemas import (
     NewUpdateProfileSchema,
@@ -25,6 +25,8 @@ from src.auth.schemas import (
     ShortProfileSerializerSchema,
     UserSerializerSchema,
     NewUpdateClinicSchema,
+    ClinicSerializerSchema,
+    UserListSerializerSchema,
 )
 from src.config import (
     ACCESS_TOKEN_EXPIRE_HOURS,
@@ -434,12 +436,12 @@ class ProfileService:
     async def update_profile(
         self,
         profile_id: int,
-        new_data: NewUpdateProfileSchema,
+        data: NewUpdateProfileSchema,
         authenticated_user: UserModel,
     ) -> ProfileSerializerSchema:
         """Update profile"""
         profile = await self.get_profile_or_404(profile_id)
-        profile.update_from_dict(new_data.model_dump(by_alias=False))
+        profile.update_from_dict(data.model_dump(by_alias=False))
         profile.save()
         self.log_service.set_log(
             module="auth",
@@ -495,10 +497,8 @@ class ProfileService:
     async def get_profiles_select(self, authenticated_user: UserModel):
         """Get profiles for select"""
         profile_list = await ProfileModel.filter(clinic=authenticated_user.clinic)
-        return [
-            {"id": profile.id, "name": profile.name} for profile in profile_list
-        ]
-    
+        return [{"id": profile.id, "name": profile.name} for profile in profile_list]
+
 
 class ClinicService:
     """Clinic Service"""
@@ -522,13 +522,20 @@ class ClinicService:
             )
         return clinic
 
-    def serializer_clinic(self, clinic: ClinicModel):
+    def serializer_clinic(self, clinic: ClinicModel) -> ClinicSerializerSchema:
         """Serialize clinic"""
-        return ClinicModel(**clinic.__dict__)
+        users = [UserListSerializerSchema(**user.__dict__) for user in clinic.users]
+        return ClinicSerializerSchema(
+            **clinic.__dict__,
+            users=users,
+            header_quarter=(
+                clinic.head_quarter.company_name if clinic.head_quarter else ""
+            ),
+        )
 
     async def create_clinic(
         self, new_clinic: NewUpdateClinicSchema, authenticated_user: UserModel
-    ) -> ClinicModel:
+    ) -> ClinicSerializerSchema:
         """Create a clinic"""
         clinic = await ClinicModel.create(
             **new_clinic.model_dump(by_alias=False),
@@ -548,8 +555,8 @@ class ClinicService:
         self,
         clinic_id: int,
         new_data: NewUpdateClinicSchema,
-        authenticated_user: UserModel
-    ) -> ClinicModel:
+        authenticated_user: UserModel,
+    ) -> ClinicSerializerSchema:
         """Update clinic"""
         clinic = await self.get_clinic_or_404(clinic_id)
         clinic.update_from_dict(new_data.model_dump(by_alias=False))
@@ -575,3 +582,55 @@ class ClinicService:
             operation="Deleção de clinica",
             identifier=0,
             user=authenticated_user,
+        )
+
+        return True
+
+    async def get_clinic(self, clinic_id: int) -> ClinicSerializerSchema:
+        """Get clinic"""
+        clinic = await self.get_clinic_or_404(clinic_id)
+        return self.serializer_clinic(clinic)
+
+    async def get_clinics(
+        self,
+        authenticated_user: UserModel,
+        clinic_filters: ClinicFilter,
+        page: int = 1,
+        size: int = 50,
+    ) -> Page[ClinicSerializerSchema]:
+        """Get paginated clinics"""
+        if authenticated_user.is_clinic_master:
+            queryset = ClinicModel.filter(
+                Q(head_quarter=authenticated_user.clinic)
+                | Q(id=authenticated_user.clinic.id)
+            )
+        else:
+            queryset = ClinicModel.filter(
+                Q(head_quarter=authenticated_user.clinic.head_quarter)
+                | Q(id=authenticated_user.clinic.head_quarter.id)
+            )
+        clinic_list = clinic_filters.filter(queryset).order_by("-created_at")
+        params = Params(page=page, size=size)
+        paginated = paginate(
+            clinic_list,
+            params=params,
+            transformer=lambda clinic_list: [
+                self.serializer_clinic(clinic).model_dump(by_alias=True)
+                for clinic in clinic_list
+            ],
+        )
+        return paginated
+
+    async def get_clinics_select(self, authenticated_user: UserModel):
+        """Get clinics for select"""
+        if authenticated_user.is_clinic_master:
+            queryset = ClinicModel.filter(
+                Q(head_quarter=authenticated_user.clinic)
+                | Q(id=authenticated_user.clinic.id)
+            ).all()
+        else:
+            queryset = ClinicModel.filter(
+                Q(head_quarter=authenticated_user.clinic.head_quarter)
+                | Q(id=authenticated_user.clinic.head_quarter.id)
+            ).all()
+        return [{"id": clinic.id, "name": clinic.company_name} for clinic in queryset]
