@@ -2,16 +2,17 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 from fastapi.responses import JSONResponse, Response
+from fastapi.security import APIKeyHeader
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm as LoginSchema
 from fastapi_filter import FilterDepends
 from starlette.requests import Request
 
-from src.auth.filters import UserFilter, ProfileFilter, ClinicFilter
+from src.auth.filters import ClinicFilter, ProfileFilter, UserFilter
 from src.auth.models import UserModel
-from src.auth.schemas import NewUserSchema, NewUpdateProfileSchema
-from src.auth.service import UserService, ProfileService, ClinicService
+from src.auth.schemas import NewUpdateProfileSchema, NewUserSchema
+from src.auth.service import ClinicService, ProfileService, UserService
 from src.backends import PermissionChecker
 from src.config import (
     MAX_PAGINATION_NUMBER,
@@ -19,12 +20,14 @@ from src.config import (
     PAGE_NUMBER_DESCRIPTION,
     PAGE_SIZE_DESCRIPTION,
     PAGINATION_NUMBER,
+    SCHEDULER_API_KEY,
 )
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 user_service = UserService()
 profile_service = ProfileService()
 clinic_service = ClinicService()
+api_key_header = APIKeyHeader(name="X-API-Key")
 
 
 @router.post("/login/")
@@ -46,6 +49,19 @@ async def refresh_token(
     """Refresh a token"""
     response_data = await user_service.refresh_token(token, request.state.clinic)
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+
+
+@router.post("/check-token/")
+async def check_token(
+    token: Annotated[str, Depends(user_service.oauth2_scheme)],
+    key_header=Security(api_key_header),
+):
+    """Check a token"""
+    if key_header == SCHEDULER_API_KEY and user_service.token_is_valid(token):
+        return JSONResponse({"message": "Valid token"})
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid API key"
+    )
 
 
 @router.post("/logout/")
@@ -383,6 +399,17 @@ async def get_clinic(
     response_data = await clinic_service.get_clinic(clinic_id)
     return JSONResponse(
         content=response_data.model_dump(by_alias=True), status_code=status.HTTP_200_OK
+    )
+
+
+@router.get("/clinics/{clinic_id}/check/")
+async def get_clinic_check(clinic_id: int, key_header=Security(api_key_header)):
+    """Check if a clinic exists"""
+    if key_header == SCHEDULER_API_KEY:
+        await clinic_service.get_clinic(clinic_id)
+        return JSONResponse({"message": "Clinic exists"})
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid API key"
     )
 
 

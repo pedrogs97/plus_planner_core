@@ -120,9 +120,7 @@ class NewUpdateProfileSchema(BaseSchema):
     """New and Update profile schema"""
 
     name: Optional[str] = None
-    permissionsIds: Optional[List[int]] = Field(
-        alias="permissionsIds", serialization_alias="permissions_ids", default=[]
-    )
+    permissions_ids: Optional[List[int]] = Field(alias="permissionsIds", default=[])
 
 
 class NewUserSchema(BaseSchema):

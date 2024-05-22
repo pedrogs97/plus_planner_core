@@ -43,7 +43,6 @@ TORTOISE_ORM = {
                 "aerich.models",
                 "src.clinic_office.models",
                 "src.auth.models",
-                "src.scheduler.models",
                 "src.billing.models",
             ],
             "default_connection": "default",
@@ -59,7 +58,6 @@ TORTOISE_ORM_TEST = {
                 "aerich.models",
                 "src.clinic_office.models",
                 "src.auth.models",
-                "src.scheduler.models",
                 "src.billing.models",
             ],
             "default_connection": "default",
@@ -129,3 +127,5 @@ PERMISSIONS = {
         "label": "Perfis e Permissões",
     },
 }
+
+SCHEDULER_API_KEY = os.getenv("SCHEDULER_API_KEY")

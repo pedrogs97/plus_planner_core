@@ -22,6 +22,13 @@ def migrate(cmd):
 
 
 @task
+def initdb(cmd):
+    """Create the database tables."""
+    cmd.run("aerich init -t src.config.TORTOISE_ORM")
+    cmd.run("aerich init-db")
+
+
+@task
 def runtest(cmd, file=None):
     """Run tests."""
     if file:
