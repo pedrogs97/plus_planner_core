@@ -10,11 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_pagination import add_pagination
-from tortoise import Tortoise, connections
+from plus_db_agent.manager import close, init
+from tortoise import connections
 from tortoise.exceptions import DBConnectionError
 
 from src.auth.router import router as auth_router
-from src.auth.service import UserService
 from src.backends import ClinicByHost
 from src.config import (
     BASE_API,
@@ -24,7 +24,6 @@ from src.config import (
     LOG_FILENAME,
     ORIGINS,
     STATIC_DIR,
-    TORTOISE_ORM,
 )
 from src.exceptions import default_response_exception
 
@@ -54,16 +53,9 @@ exception_handlers = {
 async def lifespan(app: FastAPI):
     """Context manager for the lifespan of the application."""
     logger.info("Service Version %s", app.version)
-    # db connected
-    await Tortoise.init(config=TORTOISE_ORM)
-    try:
-        await UserService().create_superuser()
-    finally:
-        pass
+    await init()
     yield
-    # app teardown
-    # db connections closed
-    await connections.close_all()
+    await close()
 
 
 appAPI = FastAPI(

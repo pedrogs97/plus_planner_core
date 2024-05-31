@@ -8,7 +8,7 @@ from tortoise import Tortoise
 from tortoise.exceptions import DBConnectionError, OperationalError
 
 from src.auth.models import UserModel
-from src.auth.service import UserService
+from src.auth.services import UserService
 from src.config import TORTOISE_ORM_TEST
 from src.main import appAPI
 

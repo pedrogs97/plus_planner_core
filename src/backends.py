@@ -6,11 +6,11 @@ from typing import Annotated, List, Union
 import jwt
 from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
+from plus_db_agent.models import ClinicModel, PermissionModel, UserModel
 from starlette.requests import Request
 
-from src.auth.models import PermissionModel, UserModel, ClinicModel
 from src.auth.schemas import PermissionSerializerSchema
-from src.auth.service import UserService
+from src.auth.services_old import UserService
 from src.config import ALGORITHM, SECRET_KEY
 
 logger = logging.getLogger(__name__)

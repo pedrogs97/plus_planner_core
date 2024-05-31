@@ -35,36 +35,6 @@ def get_database_url(test=False, sqlite=False):
     return f"postgres://{user}:{password}@{server}:{port}/{db}"
 
 
-TORTOISE_ORM = {
-    "connections": {"default": get_database_url(sqlite=os.getenv("ENABLE_SQLITE"))},
-    "apps": {
-        "models": {
-            "models": [
-                "aerich.models",
-                "src.clinic_office.models",
-                "src.auth.models",
-                "src.billing.models",
-            ],
-            "default_connection": "default",
-        },
-    },
-}
-
-TORTOISE_ORM_TEST = {
-    "connections": {"default": "sqlite://db_test.sqlite3"},
-    "apps": {
-        "models": {
-            "models": [
-                "aerich.models",
-                "src.clinic_office.models",
-                "src.auth.models",
-                "src.billing.models",
-            ],
-            "default_connection": "default",
-        },
-    },
-}
-
 PASSWORD_SUPER_USER = os.getenv("PASSWORD_SUPER_USER")
 
 TIMEZONE = os.getenv("TIMEZONE", "America/Bahia")

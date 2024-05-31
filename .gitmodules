@@ -1,6 +1,0 @@
-[submodule "database_agent"]
-	path = plus_db_agent
-	url = git@github.com:pedrogs97/plus_db_agent.git
-[submodule "plus_db_agent"]
-	path = plus_db_agent
-	url = git@github.com:pedrogs97/plus_db_agent.git

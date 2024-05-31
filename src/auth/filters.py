@@ -2,24 +2,24 @@
 
 from typing import List, Optional
 
-from src.auth.models import ProfileModel, UserModel, ClinicModel
-from src.base.filters import Filter
+from plus_db_agent.filters import BaseFilter
+from plus_db_agent.models import ClinicModel, ProfileModel, UserModel
 
 
-class ProfileFilter(Filter):
+class ProfileFilter(BaseFilter):
     """Profile filters"""
 
     name: Optional[str] = None
     name__icontains: Optional[str] = None
 
-    class Constants(Filter.Constants):
+    class Constants(BaseFilter.Constants):
         """Filter constants"""
 
         model = ProfileModel
         search_model_fields = ["name"]
 
 
-class UserFilter(Filter):
+class UserFilter(BaseFilter):
     """User filters"""
 
     profile__name: Optional[str] = None
@@ -33,14 +33,14 @@ class UserFilter(Filter):
     order_by: List[str] = []
     search: Optional[str] = None
 
-    class Constants(Filter.Constants):
+    class Constants(BaseFilter.Constants):
         """Filter constants"""
 
         model = UserModel
         search_model_fields = ["username", "email", "profile__name", "employee"]
 
 
-class ClinicFilter(Filter):
+class ClinicFilter(BaseFilter):
     """Clinic filters"""
 
     company_name__icontains: Optional[str] = None
@@ -50,7 +50,7 @@ class ClinicFilter(Filter):
     order_by: List[str] = []
     search: Optional[str] = None
 
-    class Constants(Filter.Constants):
+    class Constants(BaseFilter.Constants):
         """Filter constants"""
 
         model = ClinicModel

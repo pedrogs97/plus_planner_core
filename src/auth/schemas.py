@@ -3,10 +3,9 @@
 from datetime import datetime
 from typing import List, Optional
 
+from plus_db_agent.enums import ActionEnum, ThemeEnum
+from plus_db_agent.schemas import BaseSchema
 from pydantic import EmailStr, Field
-
-from src.base.enums import ActionEnum, ThemeEnum
-from src.base.schemas import BaseSchema
 
 
 class RefreshTokenSchema(BaseSchema):

@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import paginate
+from plus_db_agent.models import LogModel, UserModel
 from tortoise.expressions import Q
 
-from src.auth.models import UserModel
 from src.backends import PermissionChecker
 from src.config import (
     DEFAULT_DATE_TIME_FORMAT,
@@ -18,7 +18,6 @@ from src.config import (
     PAGE_SIZE_DESCRIPTION,
     PAGINATION_NUMBER,
 )
-from src.log.models import LogModel
 from src.log.schemas import LogSerializerSchema
 
 log_router = APIRouter(prefix="/logs", tags=["Log"])
