@@ -669,7 +669,7 @@ tortoise-orm = "^0.21.2"
 type = "git"
 url = "https://github.com/pedrogs97/plus_db_agent.git"
 reference = "main"
-resolved_reference = "5b9e2afd3c8a112a76dc1141f1ff4b6602cf6de1"
+resolved_reference = "fc5040b85ae17061795b11bd3355e82d64ce192f"
 
 [[package]]
 name = "pre-commit"
