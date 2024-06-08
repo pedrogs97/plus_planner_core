@@ -99,3 +99,5 @@ PERMISSIONS = {
 }
 
 SCHEDULER_API_KEY = os.getenv("SCHEDULER_API_KEY")
+AUTH_API_URL = os.getenv("AUTH_API_URL")
+AUTH_API_KEY = os.getenv("AUTH_API_KEY")

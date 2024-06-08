@@ -3,7 +3,7 @@
 import random
 from typing import List
 
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import APIKeyHeader
 from fastapi_pagination import Page
 from plus_db_agent.config import bcrypt_context
 from plus_db_agent.filters import BaseFilter, PaginationFilter
@@ -12,8 +12,8 @@ from plus_db_agent.schemas import BaseSchema
 from plus_db_agent.service import GenericService
 from tortoise.expressions import Q
 
-from src.auth.controller import ClinicController, ProfileController, UserController
-from src.auth.schemas import (
+from src.manager.controller import ClinicController, ProfileController, UserController
+from src.manager.schemas import (
     ClinicSerializerSchema,
     ProfileSerializerSchema,
     UserSerializerSchema,
@@ -24,7 +24,7 @@ class UserService(GenericService):
     """User service"""
 
     def __init__(self) -> None:
-        self.oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login/")
+        self.oauth2_scheme = APIKeyHeader(name="Authorization")
         self.model = UserModel
         self.controller = UserController()
         self.module_name = "auth"

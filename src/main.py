@@ -14,7 +14,6 @@ from plus_db_agent.manager import close, init
 from tortoise import connections
 from tortoise.exceptions import DBConnectionError
 
-from src.auth.router import router as auth_router
 from src.backends import ClinicByHost
 from src.config import (
     BASE_API,
@@ -26,6 +25,7 @@ from src.config import (
     STATIC_DIR,
 )
 from src.exceptions import default_response_exception
+from src.manager.router import router as auth_router
 
 if not os.path.exists(f"{BASE_DIR}/logs/"):
     os.makedirs(f"{BASE_DIR}/logs/")

@@ -7,10 +7,10 @@ from fastapi.testclient import TestClient
 from tortoise import Tortoise
 from tortoise.exceptions import DBConnectionError, OperationalError
 
-from src.auth.models import UserModel
-from src.auth.services import UserService
 from src.config import TORTOISE_ORM_TEST
 from src.main import appAPI
+from src.manager.models import UserModel
+from src.manager.services import UserService
 
 
 class TestBase:

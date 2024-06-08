@@ -9,9 +9,9 @@ from fastapi.exceptions import HTTPException
 from plus_db_agent.models import ClinicModel, PermissionModel, UserModel
 from starlette.requests import Request
 
-from src.auth.schemas import PermissionSerializerSchema
-from src.auth.services_old import UserService
-from src.config import ALGORITHM, SECRET_KEY
+from src.manager.client import APIClient
+from src.manager.schemas import PermissionSerializerSchema
+from src.manager.service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,8 @@ user_service = UserService()
 
 class PermissionChecker:
     """Dependence class for check permissions"""
+
+    DEFAULT_MESSAGE = "Não foi possível validar as credenciais"
 
     def __init__(
         self,
@@ -30,6 +32,7 @@ class PermissionChecker:
     ) -> None:
         self.required_permissions = required_permissions
         self.me = me
+        self.api_client = APIClient()
 
     def check_perm(
         self, perm_to_check: PermissionSerializerSchema, user_perm: PermissionModel
@@ -73,26 +76,32 @@ class PermissionChecker:
         token: Annotated[str, Depends(user_service.oauth2_scheme)],
     ) -> Union[UserModel, None]:
         try:
-            token_decoded = jwt.decode(str(token), SECRET_KEY, algorithms=ALGORITHM)
-            if not user_service.token_is_valid(token_decoded):
+            if not self.api_client.check_is_token_is_valid(token):
                 raise HTTPException(
-                    detail={"message": "Não foi possível validar as credenciais"},
+                    detail={"message": self.DEFAULT_MESSAGE},
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     headers={"WWW-Authenticate": "Bearer"},
                 )
-            user = await user_service.get_user_by_token(token_decoded)
-
-            if not user or not self.has_permissions(user, request.state.clinic):
+            user = await self.api_client.get_user_by_token(token)
+            if user:
+                await user.fetch_related("profile", "profile__permissions")
+                if not self.has_permissions(user, request.state.clinic):
+                    raise HTTPException(
+                        detail={"message": "Usuário não autorizado"},
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+            else:
                 raise HTTPException(
-                    detail={"message": "Usuário não autorizado"},
-                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={"message": "Usuário não encontrado"},
+                    status_code=status.HTTP_404_NOT_FOUND,
                 )
 
             return user
         except jwt.ExpiredSignatureError as exc:
             logger.warning("Invalid token")
             raise HTTPException(
-                detail={"message": "Não foi possível validar as credenciais"},
+                detail={"message": self.DEFAULT_MESSAGE},
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 headers={"WWW-Authenticate": "Bearer"},
             ) from exc

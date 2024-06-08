@@ -3,8 +3,8 @@
 from plus_db_agent.controller import GenericController
 from plus_db_agent.models import ClinicModel, ProfileModel, UserModel
 
-from src.auth.repository import ClinicRepository, ProfileRepository, UserRepository
-from src.auth.schemas import (
+from src.manager.repository import ClinicRepository, ProfileRepository, UserRepository
+from src.manager.schemas import (
     ClinicSerializerSchema,
     ProfileSerializerSchema,
     UserSerializerSchema,
