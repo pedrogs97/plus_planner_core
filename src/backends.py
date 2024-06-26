@@ -9,7 +9,7 @@ from fastapi.exceptions import HTTPException
 from plus_db_agent.models import ClinicModel, PermissionModel, UserModel
 from starlette.requests import Request
 
-from src.manager.client import APIClient
+from src.client import APIClient
 from src.manager.schemas import PermissionSerializerSchema
 from src.manager.service import UserService
 

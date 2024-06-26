@@ -5,7 +5,7 @@ import os
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +26,7 @@ from src.config import (
 )
 from src.exceptions import default_response_exception
 from src.manager.router import router as auth_router
+from src.wait_list.manager import ConnectionManager
 
 if not os.path.exists(f"{BASE_DIR}/logs/"):
     os.makedirs(f"{BASE_DIR}/logs/")
@@ -40,6 +41,7 @@ logging.basicConfig(
     handlers=[file_handler],
 )
 logger = logging.getLogger(__name__)
+manager = ConnectionManager()
 
 exception_handlers = {
     500: default_response_exception,
@@ -54,6 +56,7 @@ async def lifespan(app: FastAPI):
     """Context manager for the lifespan of the application."""
     logger.info("Service Version %s", app.version)
     await init()
+    manager.start_main_thread()
     yield
     await close()
 
@@ -97,3 +100,9 @@ async def health():
         return {"status": "ok"}
     except DBConnectionError:
         return {"status": "Database connection error"}
+
+
+@appAPI.websocket("/wait/list/{clinic_id}/")
+async def scheduler(websocket: WebSocket, clinic_id: int):
+    """Websocket connection"""
+    await manager.connect(websocket, clinic_id)
