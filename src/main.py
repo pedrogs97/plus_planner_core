@@ -15,6 +15,7 @@ from tortoise import connections
 from tortoise.exceptions import DBConnectionError
 
 from src.backends import ClinicByHost
+from src.clinic_office.router import router as clinic_office_router
 from src.config import (
     BASE_API,
     BASE_DIR,
@@ -70,6 +71,9 @@ appAPI = FastAPI(
 add_pagination(appAPI)
 appAPI.include_router(
     auth_router, prefix=BASE_API, dependencies=[Depends(ClinicByHost())]
+)
+appAPI.include_router(
+    clinic_office_router, prefix=BASE_API, dependencies=[Depends(ClinicByHost())]
 )
 
 appAPI.add_middleware(

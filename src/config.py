@@ -87,12 +87,19 @@ ORIGINS = [
 ]
 
 PERMISSIONS = {
-    "auth": {
+    "manager": {
         "models": [
             {"name": "permissions", "label": "Permissões"},
             {"name": "profiles", "label": "Perfil de usuário"},
             {"name": "users", "label": "Usuários"},
             {"name": "clinics", "label": "Clínicas"},
+        ],
+        "label": "Perfis e Permissões",
+    },
+    "clinic_office": {
+        "models": [
+            {"name": "specialties", "label": "Especialidades"},
+            {"name": "patients", "label": "Pacientes"},
         ],
         "label": "Perfis e Permissões",
     },

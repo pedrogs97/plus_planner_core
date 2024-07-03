@@ -1,17 +1,10 @@
 """Schemas for the auth app."""
 
-from datetime import datetime
 from typing import List, Optional
 
 from plus_db_agent.enums import ActionEnum, ThemeEnum
 from plus_db_agent.schemas import BaseSchema
 from pydantic import EmailStr, Field
-
-
-class RefreshTokenSchema(BaseSchema):
-    """Refresh token schema"""
-
-    refresh_token: str = Field(alias="refreshToken")
 
 
 class PermissionSerializerSchema(BaseSchema):
@@ -63,17 +56,6 @@ class UpdateUserSchema(BaseSchema):
     theme: Optional[ThemeEnum] = ThemeEnum.LIGHT
     is_active: Optional[bool] = Field(alias="isActive", default=None)
     is_clinic_master: bool = Field(alias="isClinicMaster", default=False)
-
-
-class UserChangePasswordSchema(BaseSchema):
-    """
-    User change password schema
-
-    Change only password
-    """
-
-    password: str
-    current_password: str = Field(alias="currentPassword")
 
 
 class UserSerializerSchema(BaseSchema):
@@ -133,21 +115,6 @@ class NewUserSchema(BaseSchema):
     full_name: str = Field(alias="fullName")
     phone: Optional[str] = None
     is_clinic_master: bool = Field(alias="isClinicMaster", default=False)
-
-
-class TokenSchema(BaseSchema):
-    """Token schema"""
-
-    id: Optional[int]
-    user: UserSerializerSchema
-    token: str
-    expires_in: datetime = Field(serialization_alias="expiresIn")
-
-
-class NewPasswordSchema(BaseSchema):
-    """New password schema"""
-
-    user_id: int = Field(serialization_alias="userId")
 
 
 class NewUpdateClinicSchema(BaseSchema):

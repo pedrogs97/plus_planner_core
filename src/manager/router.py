@@ -29,7 +29,7 @@ async def register(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "users", "action": "add"})
+            PermissionChecker({"module": "manager", "model": "users", "action": "add"})
         ),
     ],
 ):
@@ -51,7 +51,7 @@ async def get_user(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "users", "action": "view"})
+            PermissionChecker({"module": "manager", "model": "users", "action": "view"})
         ),
     ],
 ):
@@ -72,7 +72,7 @@ async def update_user(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "users", "action": "edit"})
+            PermissionChecker({"module": "manager", "model": "users", "action": "edit"})
         ),
     ],
 ):
@@ -94,7 +94,9 @@ async def delete_user(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "users", "action": "delete"})
+            PermissionChecker(
+                {"module": "manager", "model": "users", "action": "delete"}
+            )
         ),
     ],
 ):
@@ -113,7 +115,7 @@ async def get_users(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "users", "action": "view"})
+            PermissionChecker({"module": "manager", "model": "users", "action": "view"})
         ),
     ],
     user_filters: UserFilter = FilterDepends(UserFilter),
@@ -155,7 +157,9 @@ async def get_profiles(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "profiles", "action": "view"})
+            PermissionChecker(
+                {"module": "manager", "model": "profiles", "action": "view"}
+            )
         ),
     ],
     profile_filters: ProfileFilter = FilterDepends(ProfileFilter),
@@ -177,7 +181,9 @@ async def create_profile(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "profiles", "action": "add"})
+            PermissionChecker(
+                {"module": "manager", "model": "profiles", "action": "add"}
+            )
         ),
     ],
 ):
@@ -199,7 +205,9 @@ async def get_profile(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "profiles", "action": "view"})
+            PermissionChecker(
+                {"module": "manager", "model": "profiles", "action": "view"}
+            )
         ),
     ],
 ):
@@ -220,7 +228,9 @@ async def update_profile(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "profiles", "action": "edit"})
+            PermissionChecker(
+                {"module": "manager", "model": "profiles", "action": "edit"}
+            )
         ),
     ],
 ):
@@ -243,7 +253,7 @@ async def delete_profile(
         UserModel,
         Depends(
             PermissionChecker(
-                {"module": "auth", "model": "profiles", "action": "delete"}
+                {"module": "manager", "model": "profiles", "action": "delete"}
             )
         ),
     ],
@@ -265,13 +275,13 @@ async def get_profiles_select(
         Depends(
             PermissionChecker(
                 [
-                    {"module": "auth", "model": "profiles", "action": "view"},
-                    {"module": "auth", "model": "users", "action": "view"},
-                    {"module": "auth", "model": "users", "action": "edit"},
-                    {"module": "auth", "model": "users", "action": "add"},
-                    {"module": "auth", "model": "clinics", "action": "view"},
-                    {"module": "auth", "model": "clinics", "action": "edit"},
-                    {"module": "auth", "model": "clinics", "action": "add"},
+                    {"module": "manager", "model": "profiles", "action": "view"},
+                    {"module": "manager", "model": "users", "action": "view"},
+                    {"module": "manager", "model": "users", "action": "edit"},
+                    {"module": "manager", "model": "users", "action": "add"},
+                    {"module": "manager", "model": "clinics", "action": "view"},
+                    {"module": "manager", "model": "clinics", "action": "edit"},
+                    {"module": "manager", "model": "clinics", "action": "add"},
                 ]
             )
         ),
@@ -292,7 +302,9 @@ async def get_clinics(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "clinics", "action": "view"})
+            PermissionChecker(
+                {"module": "manager", "model": "clinics", "action": "view"}
+            )
         ),
     ],
     clinic_filters: ClinicFilter = FilterDepends(ClinicFilter),
@@ -314,7 +326,9 @@ async def create_clinic(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "clinics", "action": "add"})
+            PermissionChecker(
+                {"module": "manager", "model": "clinics", "action": "add"}
+            )
         ),
     ],
 ):
@@ -336,7 +350,9 @@ async def get_clinic(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "clinics", "action": "view"})
+            PermissionChecker(
+                {"module": "manager", "model": "clinics", "action": "view"}
+            )
         ),
     ],
 ):
@@ -368,7 +384,9 @@ async def update_clinic(
     authenticated_user: Annotated[
         UserModel,
         Depends(
-            PermissionChecker({"module": "auth", "model": "clinics", "action": "edit"})
+            PermissionChecker(
+                {"module": "manager", "model": "clinics", "action": "edit"}
+            )
         ),
     ],
 ):
@@ -391,7 +409,7 @@ async def delete_clinic(
         UserModel,
         Depends(
             PermissionChecker(
-                {"module": "auth", "model": "clinics", "action": "delete"}
+                {"module": "manager", "model": "clinics", "action": "delete"}
             )
         ),
     ],
@@ -413,10 +431,10 @@ async def get_clinics_select(
         Depends(
             PermissionChecker(
                 [
-                    {"module": "auth", "model": "clinics", "action": "view"},
-                    {"module": "auth", "model": "users", "action": "view"},
-                    {"module": "auth", "model": "users", "action": "edit"},
-                    {"module": "auth", "model": "users", "action": "add"},
+                    {"module": "manager", "model": "clinics", "action": "view"},
+                    {"module": "manager", "model": "users", "action": "view"},
+                    {"module": "manager", "model": "users", "action": "edit"},
+                    {"module": "manager", "model": "users", "action": "add"},
                 ]
             ),
         ),

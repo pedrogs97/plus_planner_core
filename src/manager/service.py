@@ -27,7 +27,7 @@ class UserService(GenericService):
         self.oauth2_scheme = APIKeyHeader(name="Authorization")
         self.model = UserModel
         self.controller = UserController()
-        self.module_name = "auth"
+        self.module_name = "user"
         self.serializer = UserSerializerSchema
 
     def __generate_random_password(self) -> str:
