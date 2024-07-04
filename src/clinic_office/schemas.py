@@ -5,7 +5,14 @@ from typing import List, Optional
 
 from plus_db_agent.enums import GenderEnum
 from plus_db_agent.schemas import BaseSchema
-from pydantic import Field
+from pydantic import Field, field_validator
+
+from src.clinic_office.controller import (
+    PatientController,
+    QuestionController,
+    SpecialtyController,
+    TreatmentController,
+)
 
 
 class SpecialtySerializerSchema(BaseSchema):
@@ -35,6 +42,39 @@ class TreatmentSerializerSchema(BaseSchema):
     observation: Optional[str] = ""
 
 
+class UrgencySerializerSchema(BaseSchema):
+    """Urgency serializer schema"""
+
+    id: int
+    name: str
+    description: str
+    observation: str
+    date: date
+
+
+class NewUpdateUrgencySchema(BaseSchema):
+    """New and Update urgency schema"""
+
+    name: str
+    description: str
+    observation: Optional[str] = ""
+    date = Field(default_factory=date.today)
+    patient: int
+
+    @field_validator("patient")
+    @classmethod
+    async def check_patient(cls, patient: int):
+        """Check if the patient exists"""
+        if patient < 1:
+            raise ValueError("ID do paciente inválido")
+
+        patient = await PatientController().get_obj_or_none(patient)
+        if not patient:
+            raise ValueError("Paciente não encontrado")
+
+        return patient
+
+
 class PatientSerializerSchema(BaseSchema):
     """Schema for a patient"""
 
@@ -43,6 +83,7 @@ class PatientSerializerSchema(BaseSchema):
     birth_date: Optional[date] = Field(alias="birthDate", default=None)
     gender: GenderEnum
     phone: Optional[str] = None
+    urgencies: Optional[List[UrgencySerializerSchema]] = []
 
 
 class NewPatientSchema(BaseSchema):
@@ -75,6 +116,32 @@ class NewUpdateTreatmentPatientSerializerSchema(BaseSchema):
     start_date: Optional[date] = Field(alias="startDate", default_factory=date.today)
     end_date: Optional[date] = Field(alias="endDate", default=None)
     observation: Optional[str] = ""
+
+    @field_validator("treatment")
+    @classmethod
+    async def check_treatment(cls, treatment: int):
+        """Check if the treatment exists"""
+        if treatment < 1:
+            raise ValueError("ID do tratamento inválido")
+
+        treatment = await TreatmentController().get_obj_or_none(treatment)
+        if not treatment:
+            raise ValueError("Tratamento não encontrado")
+
+        return treatment
+
+    @field_validator("patient")
+    @classmethod
+    async def check_patient(cls, patient: int):
+        """Check if the patient exists"""
+        if patient < 1:
+            raise ValueError("ID do paciente inválido")
+
+        patient = await PatientController().get_obj_or_none(patient)
+        if not patient:
+            raise ValueError("Paciente não encontrado")
+
+        return patient
 
 
 class UpdatePatientSchema(BaseSchema):
@@ -118,6 +185,34 @@ class NewUpdatePlanSchema(BaseSchema):
     observation: Optional[str] = ""
     specialties: Optional[List[int]] = []
     treatments: Optional[List[int]] = []
+
+    @field_validator("specialties")
+    @classmethod
+    async def check_specialties(cls, specialties: List[int]):
+        """Check if the specialties exists"""
+        for specialty in specialties:
+            if specialty < 1:
+                raise ValueError("ID da especialidade inválido")
+
+            specialty_db = await SpecialtyController().get_obj_or_none(specialty)
+            if not specialty_db:
+                raise ValueError("Especialidade não encontrada")
+
+        return specialties
+
+    @field_validator("treatments")
+    @classmethod
+    async def check_treatments(cls, treatments: List[int]):
+        """Check if the treatments exists"""
+        for treatment in treatments:
+            if treatment < 1:
+                raise ValueError("ID do tratamento inválido")
+
+            treatment_db = await TreatmentController().get_obj_or_none(treatment)
+            if not treatment_db:
+                raise ValueError("Tratamento não encontrado")
+
+        return treatments
 
 
 class DeskSerializerSchema(BaseSchema):
@@ -173,3 +268,17 @@ class NewUpdateAnamnesisSchema(BaseSchema):
     number: str
     description: str
     observation: Optional[str] = ""
+
+    @field_validator("questions")
+    @classmethod
+    async def check_questions(cls, questions: List[int]):
+        """Check if the questions exists"""
+        for question in questions:
+            if question < 1:
+                raise ValueError("ID da pergunta inválido")
+
+            question_db = await QuestionController().get_obj_or_none(question)
+            if not question_db:
+                raise ValueError("Pergunta não encontrada")
+
+        return questions

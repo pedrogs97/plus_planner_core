@@ -12,6 +12,7 @@ from plus_db_agent.models import (
     QuestionModel,
     SpecialtyModel,
     TreatmentModel,
+    UrgencyModel,
 )
 
 
@@ -27,6 +28,23 @@ class PatientFilter(BaseFilter):
 
         model = PatientModel
         search_model_fields = ["full_name", "taxpayer_id"]
+
+
+class UrgencyFilter(BaseFilter):
+    """Urgency filters"""
+
+    name__icontains: Optional[str] = None
+    description__icontains: Optional[str] = None
+    date__gte: Optional[str] = None
+    date__lte: Optional[str] = None
+    order_by: List[str] = []
+    search: Optional[str] = None
+
+    class Constants(BaseFilter.Constants):
+        """Filter constants"""
+
+        model = UrgencyModel
+        search_model_fields = ["name", "description"]
 
 
 class SpecialtyFilter(BaseFilter):

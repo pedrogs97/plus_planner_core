@@ -8,6 +8,7 @@ from plus_db_agent.models import (
     QuestionModel,
     SpecialtyModel,
     TreatmentModel,
+    UrgencyModel,
 )
 from plus_db_agent.repository import GenericRepository
 
@@ -17,6 +18,13 @@ class PatientRepository(GenericRepository):
 
     def __init__(self):
         self.model = PatientModel
+
+
+class UrgencyRepository(GenericRepository):
+    """Urgency repository class that will be inherited by all other repositories"""
+
+    def __init__(self):
+        self.model = UrgencyModel
 
 
 class SpecialtyRepository(GenericRepository):

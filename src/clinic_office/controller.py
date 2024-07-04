@@ -9,6 +9,7 @@ from plus_db_agent.models import (
     QuestionModel,
     SpecialtyModel,
     TreatmentModel,
+    UrgencyModel,
 )
 
 from src.clinic_office.repository import (
@@ -19,6 +20,7 @@ from src.clinic_office.repository import (
     QuestionRepository,
     SpecialtyRepository,
     TreatmentRepository,
+    UrgencyRepository,
 )
 from src.clinic_office.schemas import (
     AnamnesisSerializerSchema,
@@ -28,6 +30,7 @@ from src.clinic_office.schemas import (
     QuestionSerializerSchema,
     SpecialtySerializerSchema,
     TreatmentSerializerSchema,
+    UrgencySerializerSchema,
 )
 
 
@@ -38,6 +41,15 @@ class PatientController(GenericController):
         self.model = PatientModel
         self.serializer = PatientSerializerSchema
         self.repository = PatientRepository()
+
+
+class UrgencyController(GenericController):
+    """Urgency controller class"""
+
+    def __init__(self) -> None:
+        self.model = UrgencyModel
+        self.serializer = UrgencySerializerSchema
+        self.repository = UrgencyRepository()
 
 
 class SpecialtyController(GenericController):

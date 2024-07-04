@@ -13,6 +13,7 @@ from plus_db_agent.models import (
     SpecialtyModel,
     TreatmentModel,
     TreatmentPatientModel,
+    UrgencyModel,
     UserModel,
 )
 from plus_db_agent.service import GenericService
@@ -25,6 +26,7 @@ from src.clinic_office.controller import (
     QuestionController,
     SpecialtyController,
     TreatmentController,
+    UrgencyController,
 )
 from src.clinic_office.schemas import (
     AnamnesisSerializerSchema,
@@ -34,6 +36,7 @@ from src.clinic_office.schemas import (
     QuestionSerializerSchema,
     SpecialtySerializerSchema,
     TreatmentSerializerSchema,
+    UrgencySerializerSchema,
 )
 
 
@@ -90,6 +93,35 @@ class PatientService(GenericService):
                     for treatment_patient in treatment_patients_db
                 ]
         return patient_dict
+
+
+class UrgencyService(GenericService):
+    """Urgency service class"""
+
+    def __init__(self) -> None:
+        self.model = UrgencyModel
+        self.controller = UrgencyController()
+        self.serializer = UrgencySerializerSchema
+        self.module_name = "urgency"
+
+    async def list(self, **filters) -> List[dict]:
+        list_objs: List[UrgencyModel] = await self.controller.list(**filters)
+        return [
+            {"id": urgency.id, "name": urgency.name, "description": urgency.description}
+            for urgency in list_objs
+        ]
+
+    async def add(self, record: dict, authenticated_user: UserModel) -> dict:
+        patient = await PatientModel.get(id=record["patient"])
+        record.update({"patient": patient})
+        return await super().add(record, authenticated_user)
+
+    async def update(
+        self, record: dict, pk: int, authenticated_user: UserModel
+    ) -> dict:
+        patient = await PatientModel.get(id=record["patient"])
+        record.update({"patient": patient})
+        return await super().update(record, pk, authenticated_user)
 
 
 class SpecialtyService(GenericService):

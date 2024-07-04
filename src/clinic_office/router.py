@@ -18,6 +18,7 @@ from src.clinic_office.filters import (
     QuestionFilter,
     SpecialtyFilter,
     TreatmentFilter,
+    UrgencyFilter,
 )
 from src.clinic_office.schemas import (
     NewPatientSchema,
@@ -27,8 +28,10 @@ from src.clinic_office.schemas import (
     NewUpdateQuestionSchema,
     NewUpdateSpecialtySchema,
     NewUpdateTreatmentSchema,
+    NewUpdateUrgencySchema,
     PatientSerializerSchema,
     UpdatePatientSchema,
+    UrgencySerializerSchema,
 )
 from src.clinic_office.service import (
     AnamnesisService,
@@ -38,6 +41,7 @@ from src.clinic_office.service import (
     QuestionService,
     SpecialtyService,
     TreatmentService,
+    UrgencyService,
 )
 from src.config import NOT_ALLOWED
 
@@ -45,6 +49,7 @@ router = APIRouter(prefix="/clinic", tags=["Clinic Office"])
 clinic_office_service = PatientService()
 specialty_service = SpecialtyService()
 plan_service = PlanService()
+urgency_service = UrgencyService()
 
 
 @router.get("/patients/", response_model=Page[PatientSerializerSchema])
@@ -164,6 +169,91 @@ async def get_patient(
             status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await clinic_office_service.get_obj_or_404(patient_id)
+    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+
+
+@router.get(
+    "/patients/{patient_id}/urgencies/", response_model=Page[UrgencySerializerSchema]
+)
+async def get_patient_urgencies(
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                {"module": "clinic_office", "model": "patients", "action": "view"}
+            )
+        ),
+    ],
+    patient_id: int,
+    urgency_filters: UrgencyFilter = FilterDepends(UrgencyFilter),
+    page_filter: PaginationFilter = Depends(PaginationFilter),
+):
+    """Get all urgencies for a patient"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    response_data = await urgency_service.paginated_list(
+        urgency_filters, page_filter, patient_id=patient_id
+    )
+    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+
+
+@router.post("/patients/urgencies/", response_model=UrgencySerializerSchema)
+async def add_urgency(
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                [
+                    {"module": "clinic_office", "model": "patients", "action": "edit"},
+                    {"module": "clinic_office", "model": "urgencies", "action": "add"},
+                ]
+            )
+        ),
+    ],
+    urgency: NewUpdateUrgencySchema,
+):
+    """Add an urgency to a patient"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    response_data = await urgency_service.add(
+        urgency.model_dump(by_alias=False), authenticated_user
+    )
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
+
+
+@router.patch(
+    "/patients/urgencies/{urgency_id}/", response_model=UrgencySerializerSchema
+)
+async def update_urgency(
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                [
+                    {"module": "clinic_office", "model": "patients", "action": "edit"},
+                    {"module": "clinic_office", "model": "urgencies", "action": "edit"},
+                ]
+            )
+        ),
+    ],
+    urgency_id: int,
+    urgency: NewUpdateUrgencySchema,
+):
+    """Update an urgency"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    response_data = await urgency_service.update(
+        urgency.model_dump(by_alias=False), urgency_id, authenticated_user
+    )
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
 
 
