@@ -4,6 +4,7 @@ from plus_db_agent.controller import GenericController
 from plus_db_agent.models import (
     AnamnesisModel,
     DeskModel,
+    DocumentModel,
     PatientModel,
     PlanModel,
     QuestionModel,
@@ -15,6 +16,7 @@ from plus_db_agent.models import (
 from src.clinic_office.repository import (
     AnamnesisRepository,
     DeskRepository,
+    DocumentRepository,
     PatientRepository,
     PlanRepository,
     QuestionRepository,
@@ -25,6 +27,7 @@ from src.clinic_office.repository import (
 from src.clinic_office.schemas import (
     AnamnesisSerializerSchema,
     DeskSerializerSchema,
+    DocumentSerializerSchema,
     PatientSerializerSchema,
     PlanSerializerSchema,
     QuestionSerializerSchema,
@@ -104,3 +107,12 @@ class QuestionController(GenericController):
         self.model = QuestionModel
         self.serializer = QuestionSerializerSchema
         self.repository = QuestionRepository()
+
+
+class DocumentController(GenericController):
+    """Document controller class"""
+
+    def __init__(self) -> None:
+        self.model = DocumentModel
+        self.serializer = DocumentSerializerSchema
+        self.repository = DocumentRepository()

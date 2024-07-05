@@ -75,6 +75,46 @@ class NewUpdateUrgencySchema(BaseSchema):
         return patient
 
 
+class DocumentSerializerSchema(BaseSchema):
+    """Document serializer schema"""
+
+    id: int
+    file_name: str = Field(alias="fileName")
+    file_path: str = Field(alias="filePath")
+    obeservation: str
+
+
+class NewUpdateDocumentSchema(BaseSchema):
+    """New and Update document schema"""
+
+    file_name: str = Field(alias="fileName")
+    file_path: str = Field(alias="filePath")
+    obeservation: Optional[str] = ""
+    patient: int
+
+    @field_validator("file_path")
+    @classmethod
+    def check_file_path(cls, file_path: str):
+        """Check if the file path is valid"""
+        if not file_path:
+            raise ValueError("Caminho do arquivo inválido")
+
+        return file_path
+
+    @field_validator("patient")
+    @classmethod
+    async def check_patient(cls, patient: int):
+        """Check if the patient exists"""
+        if patient < 1:
+            raise ValueError("ID do paciente inválido")
+
+        patient = await PatientController().get_obj_or_none(patient)
+        if not patient:
+            raise ValueError("Paciente não encontrado")
+
+        return patient
+
+
 class PatientSerializerSchema(BaseSchema):
     """Schema for a patient"""
 
@@ -84,6 +124,7 @@ class PatientSerializerSchema(BaseSchema):
     gender: GenderEnum
     phone: Optional[str] = None
     urgencies: Optional[List[UrgencySerializerSchema]] = []
+    documents: Optional[List[DocumentSerializerSchema]] = []
 
 
 class NewPatientSchema(BaseSchema):

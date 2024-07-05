@@ -6,6 +6,7 @@ from plus_db_agent.models import (
     AnamnesisModel,
     BaseModel,
     DeskModel,
+    DocumentModel,
     PatientModel,
     PlanModel,
     PlanTreatmentModel,
@@ -21,6 +22,7 @@ from plus_db_agent.service import GenericService
 from src.clinic_office.controller import (
     AnamnesisController,
     DeskController,
+    DocumentController,
     PatientController,
     PlanController,
     QuestionController,
@@ -31,6 +33,7 @@ from src.clinic_office.controller import (
 from src.clinic_office.schemas import (
     AnamnesisSerializerSchema,
     DeskSerializerSchema,
+    DocumentSerializerSchema,
     PatientSerializerSchema,
     PlanSerializerSchema,
     QuestionSerializerSchema,
@@ -51,7 +54,9 @@ class PatientService(GenericService):
 
     async def list(self, **filters) -> List[dict]:
         super_list: List[PatientModel] = await super().list(**filters)
-        return [{"id": patient.id, "name": patient.name} for patient in super_list]
+        return [
+            {"id": patient.id, "fullName": patient.full_name} for patient in super_list
+        ]
 
     async def update(
         self, record: dict, pk: int, authenticated_user: UserModel
@@ -86,8 +91,8 @@ class PatientService(GenericService):
                     {
                         "id": treatment_patient.treatment.id,
                         "name": treatment_patient.treatment.name,
-                        "startDate": treatment_patient.treatment.start_date,
-                        "endDate": treatment_patient.treatment.end_date,
+                        "startDate": treatment_patient.start_date,
+                        "endDate": treatment_patient.end_date,
                         "observation": treatment_patient.treatment.observation,
                     }
                     for treatment_patient in treatment_patients_db
@@ -337,3 +342,13 @@ class QuestionService(GenericService):
         self.controller = QuestionController()
         self.serializer = QuestionSerializerSchema
         self.module_name = "question"
+
+
+class DocumentService(GenericService):
+    """Document service class"""
+
+    def __init__(self) -> None:
+        self.model = DocumentModel
+        self.controller = DocumentController()
+        self.serializer = DocumentSerializerSchema
+        self.module_name = "document"

@@ -1,9 +1,10 @@
 """Clinic office router"""
 
+import os
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi_filter import FilterDepends
 from fastapi_pagination import Page
 from plus_db_agent.filters import PaginationFilter
@@ -24,6 +25,7 @@ from src.clinic_office.schemas import (
     NewPatientSchema,
     NewUpdateAnamnesisSchema,
     NewUpdateDeskSchema,
+    NewUpdateDocumentSchema,
     NewUpdatePlanSchema,
     NewUpdateQuestionSchema,
     NewUpdateSpecialtySchema,
@@ -36,6 +38,7 @@ from src.clinic_office.schemas import (
 from src.clinic_office.service import (
     AnamnesisService,
     DeskService,
+    DocumentService,
     PatientService,
     PlanService,
     QuestionService,
@@ -335,7 +338,7 @@ async def create_specialty(
     response_data = await specialty_service.add(
         specialty_data.model_dump(by_alias=False), authenticated_user
     )
-    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
 
 
 @router.get("/specialties/{specialty_id}/")
@@ -480,7 +483,7 @@ async def create_plan(
     response_data = await plan_service.add(
         plan_data.model_dump(by_alias=False), authenticated_user
     )
-    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
 
 
 @router.get("/plans/{plan_id}/")
@@ -628,7 +631,7 @@ async def create_treatment(
     response_data = await TreatmentService().add(
         treatment_data.model_dump(by_alias=False), authenticated_user
     )
-    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
 
 
 @router.get("/treatments/{treatment_id}/")
@@ -777,7 +780,7 @@ async def create_desk(
     response_data = await DeskService().add(
         desk_data.model_dump(by_alias=False), authenticated_user
     )
-    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
 
 
 @router.get("/desks/{desk_id}/")
@@ -923,12 +926,12 @@ async def create_anamnesis(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await AnamnesisService().add(
         anamnesis_data.model_dump(by_alias=False), authenticated_user
     )
-    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
 
 
 @router.get("/anamnesis/{anamnesis_id}/")
@@ -947,7 +950,7 @@ async def get_anamnesis(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await AnamnesisService().get_obj_or_404(anamnesis_id)
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
@@ -970,7 +973,7 @@ async def update_anamnesis(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await AnamnesisService().update(
         data.model_dump(by_alias=False), anamnesis_id, authenticated_user
@@ -994,7 +997,7 @@ async def delete_anamnesis(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     await AnamnesisService().delete(anamnesis_id, authenticated_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -1027,7 +1030,7 @@ async def get_anamnesis_select(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await AnamnesisService().list(authenticated_user=authenticated_user)
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
@@ -1050,7 +1053,7 @@ async def get_questions(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await QuestionService().paginated_list(
         question_filters, page_filter
@@ -1074,12 +1077,12 @@ async def create_question(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await QuestionService().add(
         question_data.model_dump(by_alias=False), authenticated_user
     )
-    return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
 
 
 @router.get("/questions/{question_id}/")
@@ -1098,7 +1101,7 @@ async def get_question(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await QuestionService().get_obj_or_404(question_id)
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
@@ -1121,7 +1124,7 @@ async def update_question(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await QuestionService().update(
         data.model_dump(by_alias=False), question_id, authenticated_user
@@ -1145,7 +1148,7 @@ async def delete_question(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     await QuestionService().delete(question_id, authenticated_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -1178,7 +1181,102 @@ async def get_questions_select(
     if not authenticated_user:
         return JSONResponse(
             content={"message": NOT_ALLOWED},
-            status_code=status.HTTP.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
     response_data = await QuestionService().list(authenticated_user=authenticated_user)
     return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+
+
+@router.post("/documents/")
+async def create_document(
+    document_data: NewUpdateDocumentSchema,
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                {"module": "clinic_office", "model": "documents", "action": "add"}
+            )
+        ),
+    ],
+):
+    """Create document"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    await DocumentService().add(
+        document_data.model_dump(by_alias=False), authenticated_user
+    )
+    return Response(status_code=status.HTTP_201_CREATED)
+
+
+@router.get("/documents/{document_id}/")
+async def get_document(
+    document_id: int,
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                {"module": "clinic_office", "model": "documents", "action": "view"}
+            )
+        ),
+    ],
+):
+    """Get document"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    response_data = await DocumentService().get_obj_or_404(document_id)
+    path = os.path.join(response_data["file_path"], response_data["file_name"])
+    headers = {"Access-Control-Expose-Headers": "Content-Disposition"}
+    return FileResponse(path=path, filename=response_data["file_name"], headers=headers)
+
+
+@router.patch("/documents/{document_id}/")
+async def update_document(
+    document_id: int,
+    data: NewUpdateDocumentSchema,
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                {"module": "clinic_office", "model": "documents", "action": "edit"}
+            )
+        ),
+    ],
+):
+    """Update document"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    await DocumentService().update(
+        data.model_dump(by_alias=False), document_id, authenticated_user
+    )
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.delete("/documents/{document_id}/")
+async def delete_document(
+    document_id: int,
+    authenticated_user: Annotated[
+        UserModel,
+        Depends(
+            PermissionChecker(
+                {"module": "clinic_office", "model": "documents", "action": "delete"}
+            )
+        ),
+    ],
+):
+    """Delete document"""
+    if not authenticated_user:
+        return JSONResponse(
+            content={"message": NOT_ALLOWED},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    await DocumentService().delete(document_id, authenticated_user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -3,6 +3,7 @@
 from plus_db_agent.models import (
     AnamnesisModel,
     DeskModel,
+    DocumentModel,
     PatientModel,
     PlanModel,
     QuestionModel,
@@ -67,3 +68,10 @@ class QuestionRepository(GenericRepository):
 
     def __init__(self):
         self.model = QuestionModel
+
+
+class DocumentRepository(GenericRepository):
+    """Document repository class that will be inherited by all other repositories"""
+
+    def __init__(self):
+        self.model = DocumentModel
