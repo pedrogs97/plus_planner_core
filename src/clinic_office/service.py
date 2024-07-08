@@ -53,9 +53,10 @@ class PatientService(GenericService):
         self.module_name = "patient"
 
     async def list(self, **filters) -> List[dict]:
-        super_list: List[PatientModel] = await super().list(**filters)
+        super_list: List[dict] = await super().list(**filters)
         return [
-            {"id": patient.id, "fullName": patient.full_name} for patient in super_list
+            {"id": patient["id"], "fullName": patient["full_name"]}
+            for patient in super_list
         ]
 
     async def update(
@@ -110,9 +111,13 @@ class UrgencyService(GenericService):
         self.module_name = "urgency"
 
     async def list(self, **filters) -> List[dict]:
-        list_objs: List[UrgencyModel] = await self.controller.list(**filters)
+        list_objs: List[dict] = await self.controller.list(**filters)
         return [
-            {"id": urgency.id, "name": urgency.name, "description": urgency.description}
+            {
+                "id": urgency["id"],
+                "name": urgency["name"],
+                "description": urgency["description"],
+            }
             for urgency in list_objs
         ]
 
@@ -139,8 +144,11 @@ class SpecialtyService(GenericService):
         self.module_name = "specialty"
 
     async def list(self, **filters) -> List[dict]:
-        list_objs: List[SpecialtyModel] = await self.controller.list(**filters)
-        return [{"id": specialty.id, "name": specialty.name} for specialty in list_objs]
+        list_objs: List[dict] = await self.controller.list(**filters)
+        return [
+            {"id": specialty["id"], "name": specialty["name"]}
+            for specialty in list_objs
+        ]
 
 
 class TreatmentService(GenericService):
@@ -153,9 +161,13 @@ class TreatmentService(GenericService):
         self.module_name = "treatment"
 
     async def list(self, **filters) -> List[dict]:
-        list_objs: List[TreatmentModel] = await self.controller.list(**filters)
+        list_objs: List[dict] = await self.controller.list(**filters)
         return [
-            {"id": treatment.id, "name": treatment.name, "number": treatment.number}
+            {
+                "id": treatment["id"],
+                "name": treatment["name"],
+                "number": treatment["number"],
+            }
             for treatment in list_objs
         ]
 
@@ -170,8 +182,8 @@ class PlanService(GenericService):
         self.module_name = "plan"
 
     async def list(self, **filters) -> List[dict]:
-        list_objs: List[PlanModel] = await self.controller.list(**filters)
-        return [{"id": plan.id, "name": plan.name} for plan in list_objs]
+        list_objs: List[dict] = await self.controller.list(**filters)
+        return [{"id": plan["id"], "name": plan["name"]} for plan in list_objs]
 
     async def add(self, record: dict, authenticated_user: UserModel) -> dict:
         specialties = record.pop("specialties")
@@ -276,8 +288,8 @@ class DeskService(GenericService):
         self.module_name = "desk"
 
     async def list(self, **filters) -> List[dict]:
-        list_objs: List[DeskModel] = await self.controller.list(**filters)
-        return [{"id": desk.id, "number": desk.number} for desk in list_objs]
+        list_objs: List[dict] = await self.controller.list(**filters)
+        return [{"id": desk["id"], "number": desk["number"]} for desk in list_objs]
 
 
 class AnamnesisService(GenericService):
@@ -290,9 +302,13 @@ class AnamnesisService(GenericService):
         self.module_name = "anamnesis"
 
     async def list(self, **filters) -> List[dict]:
-        list_objs: List[AnamnesisModel] = await self.controller.list(**filters)
+        list_objs: List[dict] = await self.controller.list(**filters)
         return [
-            {"id": anamnesis.id, "name": anamnesis.name, "number": anamnesis.number}
+            {
+                "id": anamnesis["id"],
+                "name": anamnesis["name"],
+                "number": anamnesis["number"],
+            }
             for anamnesis in list_objs
         ]
 

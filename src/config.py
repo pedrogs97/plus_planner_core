@@ -76,6 +76,8 @@ PAGINATION_NUMBER = 15
 
 MAX_PAGINATION_NUMBER = 100
 
+ID_NOT_FOUND = "ID não encontrado"
+
 ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",

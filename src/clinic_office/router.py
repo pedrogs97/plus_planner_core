@@ -148,9 +148,7 @@ async def delete_patient(
             status_code=status.HTTP_403_FORBIDDEN,
         )
     await clinic_office_service.delete(patient_id, authenticated_user)
-    return JSONResponse(
-        content={"message": "Patient deleted"}, status_code=status.HTTP_200_OK
-    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/patients/{patient_id}/", response_model=PatientSerializerSchema)

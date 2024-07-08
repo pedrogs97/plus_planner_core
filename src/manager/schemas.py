@@ -4,7 +4,13 @@ from typing import List, Optional
 
 from plus_db_agent.enums import ActionEnum, ThemeEnum
 from plus_db_agent.schemas import BaseSchema
-from pydantic import EmailStr, Field
+from pydantic import EmailStr, Field, field_validator
+
+from src.manager.repository import (
+    ClinicRepository,
+    PermissionRepository,
+    ProfileRepository,
+)
 
 
 class PermissionSerializerSchema(BaseSchema):
@@ -47,7 +53,7 @@ class UpdateUserSchema(BaseSchema):
     Used to update
     """
 
-    profile_id: Optional[int] = Field(alias="profileId", default=None)
+    profile: Optional[int] = None
     full_name: Optional[str] = Field(alias="fullName", default=None)
     username: Optional[str] = None
     email: Optional[str] = None
@@ -56,6 +62,18 @@ class UpdateUserSchema(BaseSchema):
     theme: Optional[ThemeEnum] = ThemeEnum.LIGHT
     is_active: Optional[bool] = Field(alias="isActive", default=None)
     is_clinic_master: bool = Field(alias="isClinicMaster", default=False)
+
+    @field_validator("profile")
+    @classmethod
+    async def validate_profile(cls, profile: int):
+        """Validate profile ID"""
+        if profile < 1:
+            raise ValueError("ID do perfil inválido")
+
+        profile_db = await ProfileRepository().get_by_id(profile)
+        if not profile_db:
+            raise ValueError("Perfil não encontrado")
+        return profile
 
 
 class UserSerializerSchema(BaseSchema):
@@ -101,14 +119,26 @@ class NewUpdateProfileSchema(BaseSchema):
     """New and Update profile schema"""
 
     name: Optional[str] = None
-    permissions_ids: Optional[List[int]] = Field(alias="permissionsIds", default=[])
+    permissions: Optional[List[int]] = []
+
+    @field_validator("permissions")
+    @classmethod
+    async def validate_permissions(cls, permissions: List[int]):
+        """Validate permissions ids"""
+        for permission_id in permissions:
+            if permission_id < 1:
+                raise ValueError(f"ID da permissão inválido. ID: {permission_id}")
+            permission_db = await PermissionRepository().get_by_id(permission_id)
+            if not permission_db:
+                raise ValueError(f"Permissão não encontrada. ID: {permission_id}")
+        return permissions
 
 
 class NewUserSchema(BaseSchema):
     """New user schema"""
 
-    profile_id: Optional[int] = Field(alias="profileId")
-    clinic_id: int = Field(alias="clinicId")
+    profile: Optional[int]
+    clinic: int
     username: str
     email: EmailStr
     taxpayer_id: str = Field(alias="taxpayerId")
@@ -116,11 +146,35 @@ class NewUserSchema(BaseSchema):
     phone: Optional[str] = None
     is_clinic_master: bool = Field(alias="isClinicMaster", default=False)
 
+    @field_validator("profile")
+    @classmethod
+    async def validate_profile(cls, profile: int):
+        """Validate profile ID"""
+        if profile < 1:
+            raise ValueError("ID do perfil inválido")
+
+        profile_db = await ProfileRepository().get_by_id(profile)
+        if not profile_db:
+            raise ValueError("Perfil não encontrado")
+        return profile
+
+    @field_validator("clinic")
+    @classmethod
+    async def validate_clinic(cls, clinic: int):
+        """Validate clinic ID"""
+        if clinic < 1:
+            raise ValueError("ID da clínica inválido")
+
+        clinic_db = await ClinicRepository().get_by_id(clinic)
+        if not clinic_db:
+            raise ValueError("Clínica não encontrada")
+        return clinic
+
 
 class NewUpdateClinicSchema(BaseSchema):
     """New and Update clinic schema"""
 
-    company_name: str
+    company_name: str = Field(alias="companyName")
     address: str
     phone: str
     email: str

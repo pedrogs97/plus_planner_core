@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from plus_db_agent.models import ClinicModel, ProfileModel, UserModel
+from plus_db_agent.models import ClinicModel, PermissionModel, ProfileModel, UserModel
 from plus_db_agent.repository import GenericRepository
 
 
@@ -33,3 +33,10 @@ class ClinicRepository(GenericRepository):
 
     def __init__(self):
         self.model = ClinicModel
+
+
+class PermissionRepository(GenericRepository):
+    """Permission repository class that will be inherited by all other repositories"""
+
+    def __init__(self):
+        self.model = PermissionModel

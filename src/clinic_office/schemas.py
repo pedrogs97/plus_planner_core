@@ -7,12 +7,15 @@ from plus_db_agent.enums import GenderEnum
 from plus_db_agent.schemas import BaseSchema
 from pydantic import Field, field_validator
 
-from src.clinic_office.controller import (
-    PatientController,
-    QuestionController,
-    SpecialtyController,
-    TreatmentController,
+from src.clinic_office.repository import (
+    PatientRepository,
+    QuestionRepository,
+    SpecialtyRepository,
+    TreatmentRepository,
 )
+from src.config import ID_NOT_FOUND
+
+PATIENT_NOT_FOUND = "Paciente não encontrado"
 
 
 class SpecialtySerializerSchema(BaseSchema):
@@ -66,11 +69,11 @@ class NewUpdateUrgencySchema(BaseSchema):
     async def check_patient(cls, patient: int):
         """Check if the patient exists"""
         if patient < 1:
-            raise ValueError("ID do paciente inválido")
+            raise ValueError(f"{ID_NOT_FOUND} do paciente")
 
-        patient = await PatientController().get_obj_or_none(patient)
-        if not patient:
-            raise ValueError("Paciente não encontrado")
+        patient_db = await PatientRepository().get_by_id(patient)
+        if not patient_db:
+            raise ValueError(PATIENT_NOT_FOUND)
 
         return patient
 
@@ -106,11 +109,11 @@ class NewUpdateDocumentSchema(BaseSchema):
     async def check_patient(cls, patient: int):
         """Check if the patient exists"""
         if patient < 1:
-            raise ValueError("ID do paciente inválido")
+            raise ValueError(f"{ID_NOT_FOUND} do paciente")
 
-        patient = await PatientController().get_obj_or_none(patient)
-        if not patient:
-            raise ValueError("Paciente não encontrado")
+        patient_db = await PatientRepository().get_by_id(patient)
+        if not patient_db:
+            raise ValueError(PATIENT_NOT_FOUND)
 
         return patient
 
@@ -165,8 +168,8 @@ class NewUpdateTreatmentPatientSerializerSchema(BaseSchema):
         if treatment < 1:
             raise ValueError("ID do tratamento inválido")
 
-        treatment = await TreatmentController().get_obj_or_none(treatment)
-        if not treatment:
+        treatment_db = await TreatmentRepository().get_by_id(treatment)
+        if not treatment_db:
             raise ValueError("Tratamento não encontrado")
 
         return treatment
@@ -176,11 +179,11 @@ class NewUpdateTreatmentPatientSerializerSchema(BaseSchema):
     async def check_patient(cls, patient: int):
         """Check if the patient exists"""
         if patient < 1:
-            raise ValueError("ID do paciente inválido")
+            raise ValueError(f"{ID_NOT_FOUND} do paciente")
 
-        patient = await PatientController().get_obj_or_none(patient)
-        if not patient:
-            raise ValueError("Paciente não encontrado")
+        patient_db = await PatientRepository().get_by_id(patient)
+        if not patient_db:
+            raise ValueError(PATIENT_NOT_FOUND)
 
         return patient
 
@@ -235,7 +238,7 @@ class NewUpdatePlanSchema(BaseSchema):
             if specialty < 1:
                 raise ValueError("ID da especialidade inválido")
 
-            specialty_db = await SpecialtyController().get_obj_or_none(specialty)
+            specialty_db = await SpecialtyRepository().get_by_id(specialty)
             if not specialty_db:
                 raise ValueError("Especialidade não encontrada")
 
@@ -249,7 +252,7 @@ class NewUpdatePlanSchema(BaseSchema):
             if treatment < 1:
                 raise ValueError("ID do tratamento inválido")
 
-            treatment_db = await TreatmentController().get_obj_or_none(treatment)
+            treatment_db = await TreatmentRepository().get_by_id(treatment)
             if not treatment_db:
                 raise ValueError("Tratamento não encontrado")
 
@@ -318,7 +321,7 @@ class NewUpdateAnamnesisSchema(BaseSchema):
             if question < 1:
                 raise ValueError("ID da pergunta inválido")
 
-            question_db = await QuestionController().get_obj_or_none(question)
+            question_db = await QuestionRepository().get_by_id(question)
             if not question_db:
                 raise ValueError("Pergunta não encontrada")
 
