@@ -1,6 +1,6 @@
 """Schemas for the clinic_office module"""
 
-from datetime import date
+import datetime
 from typing import List, Optional
 
 from plus_db_agent.enums import GenderEnum
@@ -52,7 +52,7 @@ class UrgencySerializerSchema(BaseSchema):
     name: str
     description: str
     observation: str
-    date: date
+    date: datetime.date
 
 
 class NewUpdateUrgencySchema(BaseSchema):
@@ -61,7 +61,7 @@ class NewUpdateUrgencySchema(BaseSchema):
     name: str
     description: str
     observation: Optional[str] = ""
-    date = Field(default_factory=date.today)
+    date: datetime.date = Field(default_factory=datetime.date.today)
     patient: int
 
     @field_validator("patient")
@@ -123,7 +123,7 @@ class PatientSerializerSchema(BaseSchema):
 
     full_name: str = Field(alias="fullName")
     taxpayer_id: Optional[str] = Field(alias="taxpayerId", default=None)
-    birth_date: Optional[date] = Field(alias="birthDate", default=None)
+    birth_date: Optional[datetime.date] = Field(alias="birthDate", default=None)
     gender: GenderEnum
     phone: Optional[str] = None
     urgencies: Optional[List[UrgencySerializerSchema]] = []
@@ -135,7 +135,7 @@ class NewPatientSchema(BaseSchema):
 
     full_name: str = Field(alias="fullName")
     taxpayer_id: Optional[str] = Field(alias="taxpayerId", default=None)
-    birth_date: Optional[date] = Field(alias="birthDate", default=None)
+    birth_date: Optional[datetime.date] = Field(alias="birthDate", default=None)
     gender: Optional[GenderEnum] = GenderEnum.O
     phone: Optional[str] = None
 
@@ -146,8 +146,10 @@ class TreatmentPatientSerializerSchema(BaseSchema):
     id: int
     treatment: TreatmentSerializerSchema
     patient: PatientSerializerSchema
-    start_date: Optional[date] = Field(alias="startDate", default_factory=date.today)
-    end_date: Optional[date] = Field(alias="endDate", default=None)
+    start_date: Optional[datetime.date] = Field(
+        alias="startDate", default_factory=datetime.date.today
+    )
+    end_date: Optional[datetime.date] = Field(alias="endDate", default=None)
     observation: Optional[str] = ""
 
 
@@ -157,8 +159,10 @@ class NewUpdateTreatmentPatientSerializerSchema(BaseSchema):
     id: int
     treatment: int
     patient: int
-    start_date: Optional[date] = Field(alias="startDate", default_factory=date.today)
-    end_date: Optional[date] = Field(alias="endDate", default=None)
+    start_date: Optional[datetime.date] = Field(
+        alias="startDate", default_factory=datetime.date.today
+    )
+    end_date: Optional[datetime.date] = Field(alias="endDate", default=None)
     observation: Optional[str] = ""
 
     @field_validator("treatment")
@@ -193,7 +197,7 @@ class UpdatePatientSchema(BaseSchema):
 
     full_name: Optional[str] = Field(alias="fullName", default=None)
     taxpayer_id: Optional[str] = Field(alias="taxpayerId", default=None)
-    birth_date: Optional[date] = Field(alias="birthDate", default=None)
+    birth_date: Optional[datetime.date] = Field(alias="birthDate", default=None)
     gender: Optional[GenderEnum] = GenderEnum.O
     phone: Optional[str] = None
     treatments: Optional[List[NewUpdateTreatmentPatientSerializerSchema]] = []
