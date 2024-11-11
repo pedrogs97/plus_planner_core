@@ -4,10 +4,10 @@ from datetime import datetime
 from typing import List, Optional, Union
 
 from plus_db_agent.enums import SchedulerStatus
-from plus_db_agent.schemas import BaseSchema
+from plus_db_agent.schemas import BaseSchema, Message
 from pydantic import Field
 
-from src.enums import MessageType
+from src.enums import WaitListMessageType
 
 
 class ConnectionSchema(BaseSchema):
@@ -49,11 +49,10 @@ class PatientWaitListSchema(BaseSchema):
     created_at: datetime = Field(alias="createdAt", default_factory=datetime.now)
 
 
-class Message(BaseSchema):
+class WaitListMessage(Message):
     """Message Schema"""
 
-    message_type: MessageType
-    clinic_id: int = Field(alias="clinicId")
+    message_type: WaitListMessageType
     data: Optional[
         Union[
             ConnectionSchema,

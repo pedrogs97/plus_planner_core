@@ -79,11 +79,11 @@ MAX_PAGINATION_NUMBER = 100
 ID_NOT_FOUND = "ID não encontrado"
 
 ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "http://127.0.0.1",
     "http://localhost",
-    "https://localhost:3000",
+    "https://localhost:5173",
     "https://127.0.0.1",
     "https://localhost",
 ]
@@ -110,3 +110,4 @@ PERMISSIONS = {
 SCHEDULER_API_KEY = os.getenv("SCHEDULER_API_KEY")
 AUTH_API_URL = os.getenv("AUTH_API_URL")
 AUTH_API_KEY = os.getenv("AUTH_API_KEY")
+INVERTEXTO_TOKEN = os.getenv("INVERTEXTO_TOKEN")

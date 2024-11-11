@@ -6,10 +6,10 @@ from typing import Annotated, List, Union
 import jwt
 from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
-from plus_db_agent.models import ClinicModel, PermissionModel, UserModel
+from plus_db_agent.models import ClinicModel, DeskModel, PermissionModel, UserModel
 from starlette.requests import Request
 
-from src.client import APIClient
+from src.auth.service import get_user_by_token, token_is_valid
 from src.manager.schemas import PermissionSerializerSchema
 from src.manager.service import UserService
 
@@ -32,7 +32,6 @@ class PermissionChecker:
     ) -> None:
         self.required_permissions = required_permissions
         self.me = me
-        self.api_client = APIClient()
 
     def check_perm(
         self, perm_to_check: PermissionSerializerSchema, user_perm: PermissionModel
@@ -76,13 +75,13 @@ class PermissionChecker:
         token: Annotated[str, Depends(user_service.oauth2_scheme)],
     ) -> Union[UserModel, None]:
         try:
-            if not self.api_client.check_is_token_is_valid(token):
+            if not token_is_valid(token):
                 raise HTTPException(
                     detail={"message": self.DEFAULT_MESSAGE},
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     headers={"WWW-Authenticate": "Bearer"},
                 )
-            user = await self.api_client.get_user_by_token(token)
+            user = await get_user_by_token(token)
             if user:
                 await user.fetch_related("profile", "profile__permissions")
                 if not self.has_permissions(user, request.state.clinic):
@@ -125,3 +124,18 @@ class ClinicByHost:
         subdomain = host.split(".")[0]
         clinic = await ClinicModel.get_or_none(subdomain=subdomain)
         request.state.clinic = clinic
+
+
+async def check_clinic_id(pk: int) -> bool:
+    """Check if client id exists"""
+    return await ClinicModel.exists(id=pk)
+
+
+async def check_desk_exist(desk_id: int) -> bool:
+    """Check if desk exists"""
+    return await DeskModel.exists(id=desk_id)
+
+
+async def check_desk_vacancy(desk_id: int) -> bool:
+    """Check if desk vacancy"""
+    return await DeskModel.exists(id=desk_id, is_vacant=True)

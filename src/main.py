@@ -14,6 +14,8 @@ from plus_db_agent.manager import close, init
 from tortoise import connections
 from tortoise.exceptions import DBConnectionError
 
+from src.auth.exceptions import default_response_exception
+from src.auth.router import router as auth_router
 from src.backends import ClinicByHost
 from src.clinic_office.router import router as clinic_office_router
 from src.config import (
@@ -25,8 +27,8 @@ from src.config import (
     ORIGINS,
     STATIC_DIR,
 )
-from src.exceptions import default_response_exception
-from src.manager.router import router as auth_router
+from src.manager.router import router as manager_router
+from src.scheduler.manager import ConnectionManager as SchedulerManager
 from src.wait_list.manager import ConnectionManager
 
 if not os.path.exists(f"{BASE_DIR}/logs/"):
@@ -42,7 +44,8 @@ logging.basicConfig(
     handlers=[file_handler],
 )
 logger = logging.getLogger(__name__)
-manager = ConnectionManager()
+wait_list_manager = ConnectionManager()
+scheduler_manager = SchedulerManager()
 
 exception_handlers = {
     500: default_response_exception,
@@ -57,7 +60,8 @@ async def lifespan(app: FastAPI):
     """Context manager for the lifespan of the application."""
     logger.info("Service Version %s", app.version)
     await init()
-    manager.start_main_thread()
+    wait_list_manager.start_main_thread()
+    scheduler_manager.start_main_thread()
     yield
     await close()
 
@@ -69,6 +73,9 @@ appAPI = FastAPI(
 )
 
 add_pagination(appAPI)
+appAPI.include_router(
+    manager_router, prefix=BASE_API, dependencies=[Depends(ClinicByHost())]
+)
 appAPI.include_router(
     auth_router, prefix=BASE_API, dependencies=[Depends(ClinicByHost())]
 )
@@ -107,6 +114,12 @@ async def health():
 
 
 @appAPI.websocket("/wait/list/{clinic_id}/")
-async def scheduler(websocket: WebSocket, clinic_id: int):
+async def wait_list(websocket: WebSocket, clinic_id: int):
     """Websocket connection"""
-    await manager.connect(websocket, clinic_id)
+    await wait_list_manager.connect(websocket, clinic_id)
+
+
+@appAPI.websocket("/scheduler/")
+async def scheduler(websocket: WebSocket):
+    """Websocket connection"""
+    await scheduler_manager.connect(websocket)

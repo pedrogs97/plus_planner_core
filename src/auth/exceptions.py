@@ -1,13 +1,11 @@
 """Base exceptions"""
 
-import logging
-
 from fastapi import status
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
-logger = logging.getLogger(__name__)
+from src.auth.logger import logger
 
 
 def get_user_exception() -> HTTPException:
@@ -28,6 +26,16 @@ def token_exception() -> HTTPException:
         headers={"WWW-Authenticate": "Bearer"},
     )
     return token_exception_response
+
+
+def invalid_refresh_token_exception() -> HTTPException:
+    """Returns invalid refresh token exception"""
+    invalid_refresh_token_exception_response = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token de atualização inválido",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    return invalid_refresh_token_exception_response
 
 
 async def default_response_exception(
